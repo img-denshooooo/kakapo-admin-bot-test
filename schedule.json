@@ -1,0 +1,122 @@
+[
+    {
+        "cron": "0 0 9 * * *",
+        "cmds": [
+            {
+                "cmd": "DEFAULT_PLAYMODE"
+            },
+            {
+                "cmd": "ADD_QUEUE",
+                "link": "https://youtu.be/94mVMzYoOJc"
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "おはよう！お仕事です☆"
+            }
+        ]
+    },
+    {
+        "cron": "0 30 10 * * *",
+        "cmds": [
+            {
+                "cmd": "VOTE_PLAYMODE"
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "午前の投票タイムだよ～☆"
+            }
+        ]
+    },
+    {
+        "cron": "0 0 12 * * *",
+        "cmds": [
+            {
+                "cmd": "DEFAULT_PLAYMODE"
+            },
+            {
+                "cmd": "ADD_QUEUE",
+                "link": "https://youtu.be/7iFCwbaQqCE"
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "お昼だよ～☆"
+            }
+        ]
+    },
+    {
+        "cron": "0 0 13 * * *",
+        "cmds": [
+            {
+                "cmd": "RANDOM_PLAYMODE"
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "ランダムの時間だ～"
+            }
+        ]
+    },
+    {
+        "cron": "0 0 14 * * *",
+        "cmds": [
+            {
+                "cmd": "VOTE_PLAYMODE"
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "18時まで投票☆"
+            }
+        ]
+    },
+    {
+        "cron": "0 0 18 * * *",
+        "cmds": [
+            {
+                "cmd": "DEFAULT_PLAYMODE"
+            },
+            {
+                "cmd": "ADD_QUEUE",
+                "link": "https://youtu.be/sX-znbDHFbg"
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "お仕事終了！上から再生です☆"
+            }
+        ]
+    },
+    {
+        "cron": "0 30 19 * * *",
+        "cmds": [
+            {
+                "cmd": "RANDOM_PLAYMODE"
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "21時までランダムだ～☆"
+            }
+        ]
+    },
+    {
+        "cron": "0 0 21 * * *",
+        "cmds": [
+            {
+                "cmd": "VOTE_PLAYMODE"
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "24時まで投票！"
+            }
+        ]
+    },
+    {
+        "cron": "0 0 0 * * *",
+        "cmds": [
+            {
+                "cmd": "DEFAULT_PLAYMODE"
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "朝まで上からZzz..."
+            }
+        ]
+    }
+]
