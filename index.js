@@ -3,7 +3,7 @@ const request = require('request');
 const io = require('socket.io-client');
 const cron = require('node-cron');
 const fs = require('fs');
-const util = require('./util')
+const util = require('./util');
 // env
 require('dotenv').config();
 
@@ -132,7 +132,7 @@ const openPlaylist = function openPlaylist() {
 /**
  * プレイリストロック
  */
-const lockPlaylist = function openPlaylist() {
+const lockPlaylist = function lockPlaylist() {
   return new Promise((resolve, reject) => {
     if (CHANNEL.playlistLocked) {
       resolve(true);
@@ -237,6 +237,27 @@ const togglePlayMode = function togglePlayMode() {
 };
 
 /**
+ * 再生モードランダム切替
+ */
+const shufflePlayMode = function shufflePlayMode(cmd) {
+  let mode;
+  do {
+    mode = util.rand(0, 2);
+  } while (mode === CHANNEL.playmode && !cmd.sameModeOK)
+
+  switch (mode) {
+    case PLAYMODE.DEFAULT:
+      return toDefaultPlayMode();
+    case PLAYMODE.RANDOM:
+      return toRandomPlayMode();
+    case PLAYMODE.VOTE:
+      return toVotePlayMode();
+    default:
+      new Error(mode);
+  }
+};
+
+/**
  * チャット送信
  */
 const addChat = function addChat(cmd) {
@@ -287,6 +308,8 @@ const CMDS = {
   DEFAULT_PLAYMODE: toDefaultPlayMode,
   RANDOM_PLAYMODE: toRandomPlayMode,
   VOTE_PLAYMODE: toVotePlayMode,
+  TOGGLE_PLAYMODE: togglePlayMode,
+  SHUFFLE_PLAYMODE: shufflePlayMode,
   SEND_CHAT: addChat,
   ADD_QUEUE: addQueue,
 };

@@ -227,6 +227,15 @@ function parseMediaLink(url) {
     );
 }
 
+/**
+ * 指定範囲内の乱数発生
+ * 精度に関しては適当
+ */
+function rand(min, max) {
+    return Math.floor(Math.random() * (max + 1 - min) + min);
+}
+
 module.exports = {
-    parseMediaLink
+    parseMediaLink,
+    rand
 };
