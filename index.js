@@ -1,3 +1,5 @@
+// v 1.0.2
+
 // imports
 const request = require('request');
 const io = require('socket.io-client');
@@ -57,7 +59,6 @@ const connect = function connect() {
       const randomPlay = new Promise((resolve, reject) => {
         let timer;
         SOCKET.on('setRandomPlay', mode => {
-          console.log("RANDOM");
           CHANNEL.playmode = mode;
           clearTimeout(timer);
           resolve(true);
@@ -70,7 +71,6 @@ const connect = function connect() {
       const playlistLocked = new Promise((resolve, reject) => {
         let timer;
         SOCKET.on('setPlaylistLocked', mode => {
-          console.log("PLAYLIST");
           CHANNEL.playlistLocked = mode;
           clearTimeout(timer);
           resolve(true);
@@ -91,10 +91,12 @@ const connect = function connect() {
 
       Promise.all([login, randomPlay, playlistLocked])
         .then(() => {
+          console.log("connect success"); 
           console.log(CHANNEL);
           resolve(true);
         })
         .catch(() => {
+          console.log("connect fail"); 
           reject(false);
         });
     });
@@ -119,6 +121,7 @@ const openPlaylist = function openPlaylist() {
 
     var timer;
     SOCKET.once('setPlaylistLock', mode => {
+      console.log(`${new Date().toLocaleString()} - OPEN PLAYLIST`); 
       clearTimeout(timer);
       resolve(true);
     });
@@ -141,6 +144,7 @@ const lockPlaylist = function lockPlaylist() {
 
     var timer;
     SOCKET.once('setPlaylistLock', mode => {
+      console.log(`${new Date().toLocaleString()} - LOCKED PLAYLIST`); 
       clearTimeout(timer);
       resolve(true);
     });
@@ -166,6 +170,7 @@ const toDefaultPlayMode = async function toDefaultPlayMode() {
           await togglePlayMode();
           break;
       }
+      console.log(`${new Date().toLocaleString()} - DEFAULT PLAYMODE`); 
       resolve();
     } catch(e) {
       reject();
@@ -190,6 +195,7 @@ const toRandomPlayMode = async function toRandomPlayMode() {
           await togglePlayMode();
           break;
       }
+      console.log(`${new Date().toLocaleString()} - RANDOM PLAYMODE`); 
       resolve();
     } catch (e) {
       reject();
@@ -212,6 +218,7 @@ const toVotePlayMode = async function toVotePlayMode() {
         case PLAYMODE.VOTE:
           break;
       }
+      console.log(`${new Date().toLocaleString()} - VOTE PLAYMODE`); 
       resolve();
     } catch (e) {
       reject();
@@ -244,6 +251,7 @@ const shufflePlayMode = function shufflePlayMode(cmd) {
   do {
     mode = util.rand(0, 2);
   } while (mode === CHANNEL.playmode && !cmd.sameModeOK)
+  console.log(`${new Date().toLocaleString()} - SHUFFLE PLAYMODE`); 
 
   switch (mode) {
     case PLAYMODE.DEFAULT:
@@ -265,6 +273,7 @@ const addChat = function addChat(cmd) {
     var timer;
     SOCKET.once('chatMsg', mode => {
       clearTimeout(timer);
+      console.log(`${new Date().toLocaleString()} - SEND MSG:${cmd.msg}`); 
       resolve(true);
     });
     timer = setTimeout(() => {
@@ -285,6 +294,7 @@ const addQueue = function addQueue(cmd) {
     var timer;
     SOCKET.once('queue', mode => {
       clearTimeout(timer);
+      console.log(`${new Date().toLocaleString()} - ADD QUEUE:${cmd.link}`); 
       resolve(true);
     });
     timer = setTimeout(() => {
@@ -327,9 +337,9 @@ fs.readFile('./schedule.json', (err, data) => {
   }
   
   const schedules = JSON.parse(data);
-  
   schedules.forEach(task => {
     cron.schedule(task.cron, async () => {
+      console.log(`${new Date().toLocaleString()} - タスク起動`);
       if (!await connect()) {
         close();
         return;
