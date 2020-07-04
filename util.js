@@ -235,7 +235,12 @@ function rand(min, max) {
     return Math.floor(Math.random() * (max + 1 - min) + min);
 }
 
+function log(msg) {
+    console.log(`${new Date().toLocaleString()} - ${msg}`);
+}
+
 module.exports = {
     parseMediaLink,
-    rand
+    rand,
+    log
 };

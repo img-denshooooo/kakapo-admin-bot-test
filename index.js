@@ -23,9 +23,10 @@ const CHANNEL = {};
 
 // connect/close
 const connect = function connect() {
+  CHANNEL.name = process.env.CHANNEL_NAME;
   return new Promise((resolve, reject) => {
     request.get({
-      uri: `https://cytube.xyz/socketconfig/${process.env.CHANNEL_NAME}.json`
+      uri: `https://cytube.xyz/socketconfig/${CHANNEL.name}.json`
     }, (error, resp, body) => {
       const servers = JSON.parse(body).servers;
       const socketServer = servers[0].url;
@@ -33,7 +34,7 @@ const connect = function connect() {
       
       SOCKET.on('connect', () => {
         SOCKET.emit('joinChannel', {
-          name: process.env.CHANNEL_NAME
+          name: CHANNEL.name
         });
         SOCKET.emit('login', {
           name: process.env.BOT_USER_NAME,
@@ -91,12 +92,13 @@ const connect = function connect() {
 
       Promise.all([login, randomPlay, playlistLocked])
         .then(() => {
-          console.log("connect success"); 
+          util.log("connect success!")
           console.log(CHANNEL);
           resolve(true);
         })
         .catch(() => {
-          console.log("connect fail"); 
+          util.log("connect fail!"); 
+          console.log(CHANNEL);
           reject(false);
         });
     });
@@ -121,7 +123,7 @@ const openPlaylist = function openPlaylist() {
 
     var timer;
     SOCKET.once('setPlaylistLock', mode => {
-      console.log(`${new Date().toLocaleString()} - OPEN PLAYLIST`); 
+      util.log(`OPEN PLAYLIST`);
       clearTimeout(timer);
       resolve(true);
     });
@@ -144,7 +146,7 @@ const lockPlaylist = function lockPlaylist() {
 
     var timer;
     SOCKET.once('setPlaylistLock', mode => {
-      console.log(`${new Date().toLocaleString()} - LOCKED PLAYLIST`); 
+      util.log(`LOCKED PLAYLIST`);
       clearTimeout(timer);
       resolve(true);
     });
@@ -170,10 +172,10 @@ const toDefaultPlayMode = async function toDefaultPlayMode() {
           await togglePlayMode();
           break;
       }
-      console.log(`${new Date().toLocaleString()} - DEFAULT PLAYMODE`); 
-      resolve();
+      util.log(`DEFAULT PLAYMODE`);
+      resolve(true);
     } catch(e) {
-      reject();
+      reject(false);
     }
   });
 };
@@ -195,10 +197,10 @@ const toRandomPlayMode = async function toRandomPlayMode() {
           await togglePlayMode();
           break;
       }
-      console.log(`${new Date().toLocaleString()} - RANDOM PLAYMODE`); 
-      resolve();
+      util.log(`RANDOM PLAYMODE`);
+      resolve(true);
     } catch (e) {
-      reject();
+      reject(false);
     }
   });
 };
@@ -218,10 +220,10 @@ const toVotePlayMode = async function toVotePlayMode() {
         case PLAYMODE.VOTE:
           break;
       }
-      console.log(`${new Date().toLocaleString()} - VOTE PLAYMODE`); 
-      resolve();
+      util.log(`VOTE PLAYMODE`);
+      resolve(true);
     } catch (e) {
-      reject();
+      reject(false);
     }
   });
 };
@@ -251,7 +253,7 @@ const shufflePlayMode = function shufflePlayMode(cmd) {
   do {
     mode = util.rand(0, 2);
   } while (mode === CHANNEL.playmode && !cmd.sameModeOK)
-  console.log(`${new Date().toLocaleString()} - SHUFFLE PLAYMODE`); 
+  util.log(`SHUFFLE PLAYMODE`);
 
   switch (mode) {
     case PLAYMODE.DEFAULT:
@@ -273,7 +275,7 @@ const addChat = function addChat(cmd) {
     var timer;
     SOCKET.once('chatMsg', mode => {
       clearTimeout(timer);
-      console.log(`${new Date().toLocaleString()} - SEND MSG:${cmd.msg}`); 
+      util.log(`SEND MSG : ${cmd.msg}`);
       resolve(true);
     });
     timer = setTimeout(() => {
@@ -294,7 +296,7 @@ const addQueue = function addQueue(cmd) {
     var timer;
     SOCKET.once('queue', mode => {
       clearTimeout(timer);
-      console.log(`${new Date().toLocaleString()} - ADD QUEUE:${cmd.link}`); 
+      util.log(`ADD QUEUE : ${cmd.link}`);
       resolve(true);
     });
     timer = setTimeout(() => {
@@ -311,6 +313,47 @@ const addQueue = function addQueue(cmd) {
   });
 };
 
+/**
+ * キュー先頭にランダム追加
+ */
+const addQueueRandom = function addQueueRandom(cmd) {
+  return addQueue({
+    cmd: 'ADD_QUEUE',
+    link: cmd.links[util.rand(0, cmd.links.length - 1)]
+  });
+};
+
+/**
+ * 外部APIから動画リンクを取得してキュー先頭に追加
+ */
+const addQueueApi = function addQueueApi(cmd) {
+  return new Promise((resolve, reject) => {
+    request.get({
+      uri: cmd.url
+    }, (error, resp, body) => {
+      if (error) {
+        util.log("API接続失敗。 URLが正しいか及びAPIが生存しているか確認して下さい。");
+        reject(error);
+      } else {
+        try {
+          resolve(JSON.parse(body)[cmd.prop]);
+        } catch (e) {
+          util.log("JSON解析失敗。 APIの戻り値がJSONでない可能性があります。");
+          reject(e);
+        }
+      }
+    });
+  }).then(link => {
+    return addQueue({
+      cmd: 'ADD_QUEUE',
+      link
+    });
+  }).catch(err => {
+    util.log(err);
+    return false;
+  });
+};
+
 // コマンドのマップ
 const CMDS = {
   OPEN_PLAYLIST: openPlaylist,
@@ -322,6 +365,8 @@ const CMDS = {
   SHUFFLE_PLAYMODE: shufflePlayMode,
   SEND_CHAT: addChat,
   ADD_QUEUE: addQueue,
+  ADD_QUEUE_RANDOM: addQueueRandom,
+  ADD_QUEUE_API: addQueueApi,
 };
 
 // main
@@ -332,21 +377,33 @@ fs.readFile('./schedule.json', (err, data) => {
    */
 
   if (!data) {
-    console.log(err);
+    util.log("schedule.json読み込み失敗。ファイルが存在するか確認してください。");
+    util.log(err);
     return;
   }
   
-  const schedules = JSON.parse(data);
+  let schedules;
+  try {
+    schedules = JSON.parse(data);
+  } catch (e) {
+    util.log('schedule.jsonが壊れています。括弧の閉じ忘れ、カンマの付け忘れ・消し忘れ、"の有無を確認して下さい。');
+    throw e;
+  }
+  
   schedules.forEach(task => {
     cron.schedule(task.cron, async () => {
-      console.log(`${new Date().toLocaleString()} - タスク起動`);
+      util.log("タスク起動");
       if (!await connect()) {
         close();
         return;
       }
       for (const cmd of task.cmds) {
-        await CMDS[cmd.cmd](cmd);
+        if (!await CMDS[cmd.cmd](cmd)) {
+          util.log('コマンド実行失敗。設定を見直してください。');
+          console.log(cmd);
+        }
       }
+      util.log("タスク終了");
       close();
     });
   });
