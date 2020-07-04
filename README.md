@@ -12,6 +12,8 @@ cytubeのチャンネルの管理者操作をある程度自動化できます�
 分かる人はAWSのEC2インスタンスとか借りてその上で実行してみて。
 
 # 更新履歴
+- v1.0.3 20/07/04 11:05
+  - コマンド二つ追加。動画のランダム追加とAPIからの取得。
 - v1.0.2 20/07/01 10:55
   - ログをもう少しちゃんと出すようにしました。機能追加はなし。
 - v1.0.1 20/06/30 15時頃 
@@ -253,6 +255,62 @@ cytube側で短期間の連続ログインを弾いたりしているので、�
             {
                 "cmd": "ADD_QUEUE",
                 "link": "https://********************"
+            },
+            {
+                "cmd": "DEFAULT_PLAYMODE"
+            }
+        ]
+    },
+    ```
+- ADD_QUEUE_RANDOM  
+動画をランダムに追加します。`links`に好きな数の動画のURLをカンマ区切り入力してください。
+どれか一つだけ追加されます。
+    ``` js
+    // 設定例
+    // 毎日9時に占い（どれか一つの動画をランダムに追加）
+    // （同時に上から再生モードにする必要がある）
+    {
+        "cron": "0 0 9 * * *",
+        "cmds": [
+            {
+                "cmd": "ADD_QUEUE_RANDOM",
+                "links": [
+                    "https://www.youtube.com/watch?v=DU6sYVEjb-M",
+                    "https://www.youtube.com/watch?v=mS12vd-h8Bs",
+                    "https://www.youtube.com/watch?v=CYe3ZNIEhKg",
+                    "https://www.youtube.com/watch?v=uBgzd5G3Lm4",
+                    "https://www.youtube.com/watch?v=wKnoh8nxOZ4",
+                    "https://www.youtube.com/watch?v=Ziz3s7Cuh6s",
+                    "https://www.youtube.com/watch?v=d8YwinUpR_Q"
+                ]
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "今日の運勢は…"
+            },
+            {
+                "cmd": "DEFAULT_PLAYMODE"
+            }
+        ]
+    },
+    ```
+    
+- ADD_QUEUE_API  
+外部APIから動画のリンクを取得します。`url`に外部APIのURL、`prop`に取得されるJSONのURLが格納されているプロパティ名を指定して下さい。
+    ``` js
+    // 設定例
+    // 毎日9時に天気予報を追加（注意：この外部APIは制作者が違うので管理できない）
+    {
+        "cron": "0 0 9 * * *",
+        "cmds": [
+            {
+                "cmd": "ADD_QUEUE_API",
+                "url": "https://hatarake-youtube-api.herokuapp.com/tenki",
+                "prop": "url"
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "今日の天気予報です"
             },
             {
                 "cmd": "DEFAULT_PLAYMODE"
