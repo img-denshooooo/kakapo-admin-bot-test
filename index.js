@@ -1,4 +1,4 @@
-// v 1.0.2
+// v 1.0.3
 
 // imports
 const request = require('request');
