@@ -493,6 +493,198 @@ Herokuだと途中で止まる事に気付きました。というかHerokuはWe
 ログにはどこが悪いのか書かれているので、読めそうだったら頑張って読んでみよう。  
 行と列の位置も出てると思います。
 
+# 設定チュートリアル
+schedule.jsの設定チュートリアルです。  
+デフォルト設定をクリアした状態で１から設定する方法を追っていきます。
+
+## 1. 初期状態
+一番外側の括弧は`[]`になります。
+```
+[]
+```
+
+## 2. タスクを追加
+`[]`の中に`{}`を追加します。
+```
+[
+    {
+    }
+]
+```
+
+## 3. スケジュールを設定
+`{}`に`cron`属性を設定します。  
+毎日９時に起動するようにします。  
+コマンドを追加出来る様に`cmds`も追加しておきます。
+```
+[
+    {
+        "cron": "0 0 9 * * *",
+        "cmds": [
+
+        ]
+    }
+]
+```
+
+## 4. コマンドを追加
+毎日９時に動画を追加します。
+```
+[
+    {
+        "cron": "0 0 9 * * *",
+        "cmds": [
+          {
+              "cmd": "ADD_QUEUE",
+              "link": "https://*********"
+          }
+        ]
+    }
+]
+```
+更にランダム再生の動画（カカポ占い）を追加します。
+```
+[
+    {
+        "cron": "0 0 9 * * *",
+        "cmds": [
+            {
+                "cmd": "ADD_QUEUE",
+                "link": "https://*********"
+            },
+            {
+                "cmd": "ADD_QUEUE_RANDOM",
+                "links": [
+                    "https://www.youtube.com/watch?v=DU6sYVEjb-M",
+                    "https://www.youtube.com/watch?v=mS12vd-h8Bs",
+                    "https://www.youtube.com/watch?v=CYe3ZNIEhKg",
+                    "https://www.youtube.com/watch?v=uBgzd5G3Lm4",
+                    "https://www.youtube.com/watch?v=wKnoh8nxOZ4",
+                    "https://www.youtube.com/watch?v=Ziz3s7Cuh6s",
+                    "https://www.youtube.com/watch?v=d8YwinUpR_Q"
+                ]
+            }
+        ]
+    }
+]
+```
+更にAPI取得の動画（天気予報）を追加します。
+```
+[
+    {
+        "cron": "0 0 9 * * *",
+        "cmds": [
+            {
+                "cmd": "ADD_QUEUE",
+                "link": "https://*********"
+            },
+            {
+                "cmd": "ADD_QUEUE_RANDOM",
+                "links": [
+                    "https://www.youtube.com/watch?v=DU6sYVEjb-M",
+                    "https://www.youtube.com/watch?v=mS12vd-h8Bs",
+                    "https://www.youtube.com/watch?v=CYe3ZNIEhKg",
+                    "https://www.youtube.com/watch?v=uBgzd5G3Lm4",
+                    "https://www.youtube.com/watch?v=wKnoh8nxOZ4",
+                    "https://www.youtube.com/watch?v=Ziz3s7Cuh6s",
+                    "https://www.youtube.com/watch?v=d8YwinUpR_Q"
+                ]
+            },
+            {
+                "cmd": "ADD_QUEUE_API",
+                "url": "https://hatarake-youtube-api.herokuapp.com/tenki",
+                "prop": "url"
+            }
+        ]
+    }
+]
+```
+更にチャット送信を追加します。
+```
+[
+    {
+        "cron": "0 0 9 * * *",
+        "cmds": [
+            {
+                "cmd": "ADD_QUEUE",
+                "link": "https://*********"
+            },
+            {
+                "cmd": "ADD_QUEUE_RANDOM",
+                "links": [
+                    "https://www.youtube.com/watch?v=DU6sYVEjb-M",
+                    "https://www.youtube.com/watch?v=mS12vd-h8Bs",
+                    "https://www.youtube.com/watch?v=CYe3ZNIEhKg",
+                    "https://www.youtube.com/watch?v=uBgzd5G3Lm4",
+                    "https://www.youtube.com/watch?v=wKnoh8nxOZ4",
+                    "https://www.youtube.com/watch?v=Ziz3s7Cuh6s",
+                    "https://www.youtube.com/watch?v=d8YwinUpR_Q"
+                ]
+            },
+            {
+                "cmd": "ADD_QUEUE_API",
+                "url": "https://hatarake-youtube-api.herokuapp.com/tenki",
+                "prop": "url"
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "おはよう！今日も仕事だ！"
+            }
+        ]
+    }
+]
+```
+これで、毎日朝９時に、
+1. 決められた動画を追加
+1. ランダムで動画を追加
+1. APIから取得した動画を追加
+1. チャットを送信
+
+するタスクが出来ます。  
+更に１２時のタスクを追加します。
+```
+[
+    {
+        "cron": "0 0 9 * * *",
+        "cmds": [
+            {
+                "cmd": "ADD_QUEUE",
+                "link": "https://*********"
+            },
+            {
+                "cmd": "ADD_QUEUE_RANDOM",
+                "links": [
+                    "https://www.youtube.com/watch?v=DU6sYVEjb-M",
+                    "https://www.youtube.com/watch?v=mS12vd-h8Bs",
+                    "https://www.youtube.com/watch?v=CYe3ZNIEhKg",
+                    "https://www.youtube.com/watch?v=uBgzd5G3Lm4",
+                    "https://www.youtube.com/watch?v=wKnoh8nxOZ4",
+                    "https://www.youtube.com/watch?v=Ziz3s7Cuh6s",
+                    "https://www.youtube.com/watch?v=d8YwinUpR_Q"
+                ]
+            },
+            {
+                "cmd": "ADD_QUEUE_API",
+                "url": "https://hatarake-youtube-api.herokuapp.com/tenki",
+                "prop": "url"
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "おはよう！今日も仕事だ！"
+            }
+        ]
+    },
+    {
+        "cron": "0 0 12 * * *",
+        "cmds": [
+            "cmd": "SEND_CHAT",
+            "msg": "お昼です！"
+        ]
+    }
+]
+```
+こんな感じでタスクやコマンドを追加していくのが基本的な使い方です。
+
 # ごめん
 在宅勤務で暇だから片手間で作ったやつだからね。  
 動かなかったらごめん。報告してくれたら直します。  
