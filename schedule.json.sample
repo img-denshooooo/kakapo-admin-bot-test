@@ -1,0 +1,58 @@
+[
+    {
+        "cron": "0 0 9 * * *",
+        "cmds": [
+            {
+                "cmd": "ADD_QUEUE",
+                "link": "https://***"
+            },
+            {
+                "cmd": "ADD_QUEUE_RANDOM",
+                "links": [
+                    "https://www.youtube.com/watch?v=DU6sYVEjb-M",
+                    "https://www.youtube.com/watch?v=mS12vd-h8Bs",
+                    "https://www.youtube.com/watch?v=CYe3ZNIEhKg",
+                    "https://www.youtube.com/watch?v=uBgzd5G3Lm4",
+                    "https://www.youtube.com/watch?v=wKnoh8nxOZ4",
+                    "https://www.youtube.com/watch?v=Ziz3s7Cuh6s",
+                    "https://www.youtube.com/watch?v=d8YwinUpR_Q"
+                ]
+            },
+            {
+                "cmd": "ADD_QUEUE_API",
+                "url": "https://hatarake-youtube-api.herokuapp.com/tenki",
+                "prop": "url"
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "おはよう！お仕事です☆"
+            }
+        ]
+    },
+    {
+        "cron": "0 0 12 * * *",
+        "cmds": [
+            {
+                "cmd": "ADD_QUEUE",
+                "link": "https://***"
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "お昼だよ～☆"
+            }
+        ]
+    },
+    {
+        "cron": "0 0 18 * * *",
+        "cmds": [
+            {
+                "cmd": "ADD_QUEUE",
+                "link": "https://***"
+            },
+            {
+                "cmd": "SEND_CHAT",
+                "msg": "お仕事終了☆"
+            }
+        ]
+    }
+]
