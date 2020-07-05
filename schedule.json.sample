@@ -3,8 +3,9 @@
         "cron": "0 0 9 * * *",
         "cmds": [
             {
-                "cmd": "ADD_QUEUE",
-                "link": "https://***"
+                "cmd": "ADD_QUEUE_API",
+                "url": "https://hatarake-youtube-api.herokuapp.com/tenki",
+                "prop": "url"
             },
             {
                 "cmd": "ADD_QUEUE_RANDOM",
@@ -19,9 +20,8 @@
                 ]
             },
             {
-                "cmd": "ADD_QUEUE_API",
-                "url": "https://hatarake-youtube-api.herokuapp.com/tenki",
-                "prop": "url"
+                "cmd": "ADD_QUEUE",
+                "link": "https://***"
             },
             {
                 "cmd": "SEND_CHAT",
