@@ -1,4 +1,4 @@
-// v 1.0.3
+// v 1.0.4
 
 // imports
 const request = require('request');
@@ -82,11 +82,13 @@ const connect = function connect() {
       });
 
       SOCKET.on('error', msg => {
+        console.log('error!');
         console.log(msg);
         SOCKET.close();
       });
 
       SOCKET.on('errorMsg', data => {
+        console.log('error!');
         console.log(data.msg);
       });
 
@@ -300,7 +302,7 @@ const addQueue = function addQueue(cmd) {
       resolve(true);
     });
     timer = setTimeout(() => {
-      reject(false);
+      reject('TIMEOUT - 時間内に正常終了しませんでした。youtubeの場合、追加制限がかかっているかもしれません。');
     }, TIMEOUT);
     let data = util.parseMediaLink(cmd.link);
     SOCKET.emit("queue", {
@@ -398,8 +400,13 @@ fs.readFile('./schedule.json', (err, data) => {
         return;
       }
       for (const cmd of task.cmds) {
-        if (!await CMDS[cmd.cmd](cmd)) {
-          util.log('コマンド実行失敗。設定を見直してください。');
+        util.log(`コマンド [${cmd.cmd}] 実行`);
+        try {
+          await CMDS[cmd.cmd](cmd);
+          util.log(`コマンド [${cmd.cmd}] 実行完了。`);
+        } catch (e) {
+          util.log(`コマンド [${cmd.cmd}] 実行失敗。`);
+          console.log(e);
           console.log(cmd);
         }
       }
