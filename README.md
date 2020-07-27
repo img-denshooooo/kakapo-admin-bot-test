@@ -324,7 +324,7 @@ cytube側で短期間の連続ログインを弾いたりしているので、�
         ]
     },
     ```
-- ADD_QUEUE_LIBRARY_TIME
+- ADD_QUEUE_LIBRARY_TIME  
 ライブラリから指定した分ぶんのランダムな曲を重複なしでキューに追加します。  
 追加は6秒間隔で行われます（負荷対策）。指定次第では結構時間がかかります。
     ``` js
@@ -341,7 +341,7 @@ cytube側で短期間の連続ログインを弾いたりしているので、�
     },
     ```
     
-- ADD_QUEUE_LIBRARY_COUNT
+- ADD_QUEUE_LIBRARY_COUNT  
 ライブラリから指定した数のランダムな曲を重複なしでキューに追加します。  
 追加は6秒間隔で行われます（負荷対策）。指定次第では結構時間がかかります。
     ``` js
@@ -751,13 +751,13 @@ node call {コマンド} {コマンドごとの引数}
   ```
 
 - ADD_QUEUE_LIBRARY_TIME  
-  120分ぶんの動画を追加。
+  ライブラリからランダムに120分ぶんの動画を追加。
   ```
   node call ADD_QUEUE_LIBRARY_TIME 120
   ```
   
 - ADD_QUEUE_LIBRARY_COUNT  
-  100件ぶんの動画を追加。
+  ライブラリからランダムに100件ぶんの動画を追加。
   ```
   node call ADD_QUEUE_LIBRARY_COUNT 100 
   ```
