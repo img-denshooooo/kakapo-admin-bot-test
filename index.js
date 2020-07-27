@@ -1,375 +1,14 @@
-// v 1.0.4
+// v 1.0.5
 
 // imports
-const request = require('request');
-const io = require('socket.io-client');
 const cron = require('node-cron');
 const fs = require('fs');
 const util = require('./util');
+const { connect, close, CMDS } = require('./cmds')
 // env
 require('dotenv').config();
 
-// const
-const PLAYMODE = {
-  DEFAULT: 0,
-  RANDOM: 1,
-  VOTE: 2
-};
-const TIMEOUT = 10000;
-
-// prop
-let SOCKET;
-const CHANNEL = {};
-
-// connect/close
-const connect = function connect() {
-  CHANNEL.name = process.env.CHANNEL_NAME;
-  return new Promise((resolve, reject) => {
-    request.get({
-      uri: `https://cytube.xyz/socketconfig/${CHANNEL.name}.json`
-    }, (error, resp, body) => {
-      const servers = JSON.parse(body).servers;
-      const socketServer = servers[0].url;
-      SOCKET = io(socketServer, { reconnection: true });
-      
-      SOCKET.on('connect', () => {
-        SOCKET.emit('joinChannel', {
-          name: CHANNEL.name
-        });
-        SOCKET.emit('login', {
-          name: process.env.BOT_USER_NAME,
-          pw: process.env.BOT_USER_PW
-        });
-      });
-
-      SOCKET.on('joinChannel', data => {
-        console.log(data);
-      });
-
-      const login = new Promise((resolve, reject) => {
-        SOCKET.on('login', data => {
-          console.log(data);
-          if (data.success) {
-            resolve(true);
-          } else {
-            reject(false);
-          }
-        });
-      });
-
-      const randomPlay = new Promise((resolve, reject) => {
-        let timer;
-        SOCKET.on('setRandomPlay', mode => {
-          CHANNEL.playmode = mode;
-          clearTimeout(timer);
-          resolve(true);
-        });
-        timer = setTimeout(() => {
-          reject(false);
-        }, TIMEOUT);
-      });
-
-      const playlistLocked = new Promise((resolve, reject) => {
-        let timer;
-        SOCKET.on('setPlaylistLocked', mode => {
-          CHANNEL.playlistLocked = mode;
-          clearTimeout(timer);
-          resolve(true);
-        });
-        timer = setTimeout(() => {
-          reject(false);
-        }, TIMEOUT);
-      });
-
-      SOCKET.on('error', msg => {
-        console.log('error!');
-        console.log(msg);
-        SOCKET.close();
-      });
-
-      SOCKET.on('errorMsg', data => {
-        console.log('error!');
-        console.log(data.msg);
-      });
-
-      Promise.all([login, randomPlay, playlistLocked])
-        .then(() => {
-          util.log("connect success!")
-          console.log(CHANNEL);
-          resolve(true);
-        })
-        .catch(() => {
-          util.log("connect fail!"); 
-          console.log(CHANNEL);
-          reject(false);
-        });
-    });
-  });
-};
-
-const close = function close() {
-  SOCKET.close();
-}
-
-// こっからコマンド本体
-
-/**
- * プレイリスト開放
- */
-const openPlaylist = function openPlaylist() {
-  return new Promise((resolve, reject) => {
-    if (!CHANNEL.playlistLocked) {
-      resolve(true);
-      return;
-    }
-
-    var timer;
-    SOCKET.once('setPlaylistLock', mode => {
-      util.log(`OPEN PLAYLIST`);
-      clearTimeout(timer);
-      resolve(true);
-    });
-    timer = setTimeout(() => {
-      reject(false);
-    }, TIMEOUT);
-    SOCKET.emit("togglePlaylistLock");
-  });
-};
-
-/**
- * プレイリストロック
- */
-const lockPlaylist = function lockPlaylist() {
-  return new Promise((resolve, reject) => {
-    if (CHANNEL.playlistLocked) {
-      resolve(true);
-      return;
-    }
-
-    var timer;
-    SOCKET.once('setPlaylistLock', mode => {
-      util.log(`LOCKED PLAYLIST`);
-      clearTimeout(timer);
-      resolve(true);
-    });
-    timer = setTimeout(() => {
-      reject(false);
-    }, TIMEOUT);
-    SOCKET.emit("togglePlaylistLock");
-  });
-};
-
-/**
- * デフォルト再生モード（上から）に変更
- */
-const toDefaultPlayMode = async function toDefaultPlayMode() {
-  return new Promise(async (resolve, reject) => {
-    try {
-      switch (CHANNEL.playmode) {
-        case PLAYMODE.DEFAULT:
-          break;
-        case PLAYMODE.RANDOM:
-          await togglePlayMode();
-        case PLAYMODE.VOTE:
-          await togglePlayMode();
-          break;
-      }
-      util.log(`DEFAULT PLAYMODE`);
-      resolve(true);
-    } catch(e) {
-      reject(false);
-    }
-  });
-};
-
-/**
- * ランダム再生モードに変更
- */
-const toRandomPlayMode = async function toRandomPlayMode() {
-  return new Promise(async (resolve, reject) => {
-    try {
-      switch (CHANNEL.playmode) {
-        case PLAYMODE.DEFAULT:
-          await togglePlayMode();
-          break;
-        case PLAYMODE.RANDOM:
-          break;
-        case PLAYMODE.VOTE:
-          await togglePlayMode();
-          await togglePlayMode();
-          break;
-      }
-      util.log(`RANDOM PLAYMODE`);
-      resolve(true);
-    } catch (e) {
-      reject(false);
-    }
-  });
-};
-
-/**
- * 投票再生モードに変更
- */
-const toVotePlayMode = async function toVotePlayMode() {
-  return new Promise(async (resolve, reject) => {
-    try {
-      switch (CHANNEL.playmode) {
-        case PLAYMODE.DEFAULT:
-          await togglePlayMode();
-        case PLAYMODE.RANDOM:
-          await togglePlayMode();
-          break;
-        case PLAYMODE.VOTE:
-          break;
-      }
-      util.log(`VOTE PLAYMODE`);
-      resolve(true);
-    } catch (e) {
-      reject(false);
-    }
-  });
-};
-
-/**
- * 再生モード切替
- */
-const togglePlayMode = function togglePlayMode() {
-  return new Promise((resolve, reject) => {
-    var timer;
-    SOCKET.once('setRandomPlay', mode => {
-      clearTimeout(timer);
-      resolve(true);
-    });
-    timer = setTimeout(() => {
-      reject(false);
-    }, TIMEOUT);
-    SOCKET.emit("toggleRandomPlay");
-  });
-};
-
-/**
- * 再生モードランダム切替
- */
-const shufflePlayMode = function shufflePlayMode(cmd) {
-  let mode;
-  do {
-    mode = util.rand(0, 2);
-  } while (mode === CHANNEL.playmode && !cmd.sameModeOK)
-  util.log(`SHUFFLE PLAYMODE`);
-
-  switch (mode) {
-    case PLAYMODE.DEFAULT:
-      return toDefaultPlayMode();
-    case PLAYMODE.RANDOM:
-      return toRandomPlayMode();
-    case PLAYMODE.VOTE:
-      return toVotePlayMode();
-    default:
-      new Error(mode);
-  }
-};
-
-/**
- * チャット送信
- */
-const addChat = function addChat(cmd) {
-  return new Promise((resolve, reject) => {
-    var timer;
-    SOCKET.once('chatMsg', mode => {
-      clearTimeout(timer);
-      util.log(`SEND MSG : ${cmd.msg}`);
-      resolve(true);
-    });
-    timer = setTimeout(() => {
-      reject(false);
-    }, TIMEOUT);
-    SOCKET.emit("chatMsg", {
-      msg: cmd.msg,
-      meta: {}
-    });
-  });
-};
-
-/**
- * キュー先頭に追加
- */
-const addQueue = function addQueue(cmd) {
-  return new Promise((resolve, reject) => {
-    var timer;
-    SOCKET.once('queue', mode => {
-      clearTimeout(timer);
-      util.log(`ADD QUEUE : ${cmd.link}`);
-      resolve(true);
-    });
-    timer = setTimeout(() => {
-      reject('TIMEOUT - 時間内に正常終了しませんでした。youtubeの場合、追加制限がかかっているかもしれません。');
-    }, TIMEOUT);
-    let data = util.parseMediaLink(cmd.link);
-    SOCKET.emit("queue", {
-      id: data.id,
-      type: data.type,
-      pos: "next",
-      duration: 0,
-      temp: true
-    });
-  });
-};
-
-/**
- * キュー先頭にランダム追加
- */
-const addQueueRandom = function addQueueRandom(cmd) {
-  return addQueue({
-    cmd: 'ADD_QUEUE',
-    link: cmd.links[util.rand(0, cmd.links.length - 1)]
-  });
-};
-
-/**
- * 外部APIから動画リンクを取得してキュー先頭に追加
- */
-const addQueueApi = function addQueueApi(cmd) {
-  return new Promise((resolve, reject) => {
-    request.get({
-      uri: cmd.url
-    }, (error, resp, body) => {
-      if (error) {
-        util.log("API接続失敗。 URLが正しいか及びAPIが生存しているか確認して下さい。");
-        reject(error);
-      } else {
-        try {
-          resolve(JSON.parse(body)[cmd.prop]);
-        } catch (e) {
-          util.log("JSON解析失敗。 APIの戻り値がJSONでない可能性があります。");
-          reject(e);
-        }
-      }
-    });
-  }).then(link => {
-    return addQueue({
-      cmd: 'ADD_QUEUE',
-      link
-    });
-  }).catch(err => {
-    util.log(err);
-    return false;
-  });
-};
-
-// コマンドのマップ
-const CMDS = {
-  OPEN_PLAYLIST: openPlaylist,
-  LOCK_PLAYLIST: lockPlaylist,
-  DEFAULT_PLAYMODE: toDefaultPlayMode,
-  RANDOM_PLAYMODE: toRandomPlayMode,
-  VOTE_PLAYMODE: toVotePlayMode,
-  TOGGLE_PLAYMODE: togglePlayMode,
-  SHUFFLE_PLAYMODE: shufflePlayMode,
-  SEND_CHAT: addChat,
-  ADD_QUEUE: addQueue,
-  ADD_QUEUE_RANDOM: addQueueRandom,
-  ADD_QUEUE_API: addQueueApi,
-};
+util.log('起動します。');
 
 // main
 fs.readFile('./schedule.json', (err, data) => {
@@ -383,7 +22,7 @@ fs.readFile('./schedule.json', (err, data) => {
     util.log(err);
     return;
   }
-  
+
   let schedules;
   try {
     schedules = JSON.parse(data);
@@ -391,7 +30,9 @@ fs.readFile('./schedule.json', (err, data) => {
     util.log('schedule.jsonが壊れています。括弧の閉じ忘れ、カンマの付け忘れ・消し忘れ、"の有無を確認して下さい。');
     throw e;
   }
-  
+
+  util.log(`${schedules.length} 件のタスクを設定。`);
+
   schedules.forEach(task => {
     cron.schedule(task.cron, async () => {
       util.log("タスク起動");
@@ -414,5 +55,7 @@ fs.readFile('./schedule.json', (err, data) => {
       close();
     });
   });
+
+  util.log('タスク実行を待機します。');
 
 });
