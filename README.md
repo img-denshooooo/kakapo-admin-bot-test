@@ -752,12 +752,14 @@ node call {コマンド} {コマンドごとの引数}
 
 - ADD_QUEUE_LIBRARY_TIME  
   ライブラリからランダムに120分ぶんの動画を追加。
+  ※ 事前に上から再生モードにしておいた方がいい
   ```
   node call ADD_QUEUE_LIBRARY_TIME 120
   ```
   
 - ADD_QUEUE_LIBRARY_COUNT  
   ライブラリからランダムに100件ぶんの動画を追加。
+  ※ 事前に上から再生モードにしておいた方がいい
   ```
   node call ADD_QUEUE_LIBRARY_COUNT 100 
   ```
