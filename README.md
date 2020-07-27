@@ -738,38 +738,38 @@ node call {コマンド} {コマンドごとの引数}
 一部のコマンドは直接実行対象外です。
 以下はコマンド実行例。
 
-- SEND_CHAT
+- SEND_CHAT  
   テストと送信。
   ```
   node call SEND_CHAT "テスト"
   ```
   
-- ADD_QUEUE
+- ADD_QUEUE  
   動画を追加
   ```
   node call ADD_QUEUE 動画のURL
   ```
 
-- ADD_QUEUE_LIBRARY_TIME
+- ADD_QUEUE_LIBRARY_TIME  
   120分ぶんの動画を追加。
   ```
   node call ADD_QUEUE_LIBRARY_TIME 120
   ```
   
-- ADD_QUEUE_LIBRARY_COUNT
+- ADD_QUEUE_LIBRARY_COUNT  
   100件ぶんの動画を追加。
   ```
   node call ADD_QUEUE_LIBRARY_COUNT 100 
   ```
 
-- OPEN_PLAYLIST
+- OPEN_PLAYLIST  
 - LOCK_PLAYLIST
 - DEFAULT_PLAYMODE
 - RANDOM_PLAYMODE
 - VOTE_PLAYMODE
 - TOGGLE_PLAYMODE
-- SHUFFLE_PLAYMODE
-  引数なし。
+- SHUFFLE_PLAYMODE  
+  全部まとめて引数なし。
   ```
   node call OPEN_PLAYLIST
   ```
