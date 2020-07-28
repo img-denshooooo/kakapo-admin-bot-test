@@ -11,7 +11,7 @@ function extractQueryParam(query, param) {
 }
 
 function parseMediaLink(url) {
-    if (typeof url != "string") {
+    if(typeof url != "string") {
         return {
             id: null,
             type: null
@@ -20,7 +20,7 @@ function parseMediaLink(url) {
     url = url.trim();
     url = url.replace("feature=player_embedded&", "");
 
-    if (url.indexOf("rtmp://") == 0) {
+    if(url.indexOf("rtmp://") == 0) {
         return {
             id: url,
             type: "rt"
@@ -28,21 +28,23 @@ function parseMediaLink(url) {
     }
 
     var m;
-    if ((m = url.match(/youtube\.com\/watch\?([^#]+)/))) {
+    if((m = url.match(/youtube\.com\/watch\?([^#]+)/))) {
         return {
             id: extractQueryParam(m[1], "v"),
+            stime: parseTimeParam(extractQueryParam(m[1], "t")),
             type: "yt"
         };
     }
 
-    if ((m = url.match(/youtu\.be\/([^\?&#]+)/))) {
+    if((m = url.match(/youtu\.be\/([^\?&#]+)(?=\?([^#]+)|)/))) {
         return {
             id: m[1],
+            stime: m[2] ? parseTimeParam(extractQueryParam(m[2], "t")) : undefined,
             type: "yt"
         };
     }
 
-    if ((m = url.match(/youtube\.com\/playlist\?([^#]+)/))) {
+    if((m = url.match(/youtube\.com\/playlist\?([^#]+)/))) {
         return {
             id: extractQueryParam(m[1], "list"),
             type: "yp"
@@ -64,7 +66,7 @@ function parseMediaLink(url) {
         }
     }
 
-    if ((m = url.match(/twitch\.tv\/(?:.*?)\/([cv])\/(\d+)/))) {
+    if((m = url.match(/twitch\.tv\/(?:.*?)\/([cv])\/(\d+)/))) {
         return {
             id: m[1] + m[2],
             type: "tv"
@@ -76,28 +78,28 @@ function parseMediaLink(url) {
      * Twitch changed their URL pattern for recorded videos, apparently.
      * https://github.com/calzoneman/sync/issues/646
      */
-    if ((m = url.match(/twitch\.tv\/videos\/(\d+)/))) {
+    if((m = url.match(/twitch\.tv\/videos\/(\d+)/))) {
         return {
             id: "v" + m[1],
             type: "tv"
         };
     }
 
-    if ((m = url.match(/twitch\.tv\/([\w-]+)/))) {
+    if((m = url.match(/twitch\.tv\/([\w-]+)/))) {
         return {
             id: m[1],
             type: "tw"
         };
     }
 
-    if ((m = url.match(/livestream\.com\/([^\?&#]+)/))) {
+    if((m = url.match(/livestream\.com\/([^\?&#]+)/))) {
         return {
             id: m[1],
             type: "li"
         };
     }
 
-    if ((m = url.match(/ustream\.tv\/([^\?&#]+)/))) {
+    if((m = url.match(/ustream\.tv\/([^\?&#]+)/))) {
         return {
             id: m[1],
             type: "us"
@@ -111,28 +113,28 @@ function parseMediaLink(url) {
         };
     }
 
-    if ((m = url.match(/vimeo\.com\/([^\?&#]+)/))) {
+    if((m = url.match(/vimeo\.com\/([^\?&#]+)/))) {
         return {
             id: m[1],
             type: "vi"
         };
     }
 
-    if ((m = url.match(/dailymotion\.com\/video\/([^\?&#_]+)/))) {
+    if((m = url.match(/dailymotion\.com\/video\/([^\?&#_]+)/))) {
         return {
             id: m[1],
             type: "dm"
         };
     }
 
-    if ((m = url.match(/imgur\.com\/a\/([^\?&#]+)/))) {
+    if((m = url.match(/imgur\.com\/a\/([^\?&#]+)/))) {
         return {
             id: m[1],
             type: "im"
         };
     }
 
-    if ((m = url.match(/soundcloud\.com\/([^\?&#]+)/))) {
+    if((m = url.match(/soundcloud\.com\/([^\?&#]+)/))) {
         return {
             id: url,
             type: "sc"
@@ -162,7 +164,7 @@ function parseMediaLink(url) {
         };
     }
 
-    if ((m = url.match(/streamable\.com\/([\w-]+)/))) {
+    if((m = url.match(/streamable\.com\/([\w-]+)/))) {
         return {
             id: m[1],
             type: "sb"
@@ -178,7 +180,7 @@ function parseMediaLink(url) {
 
     /*  Shorthand URIs  */
     // So we still trim DailyMotion URLs
-    if ((m = url.match(/^dm:([^\?&#_]+)/))) {
+    if((m = url.match(/^dm:([^\?&#_]+)/))) {
         return {
             id: m[1],
             type: "dm"
@@ -218,7 +220,7 @@ function parseMediaLink(url) {
             // Assume raw file (server will check)
             return {
                 id: url,
-                type: "fi"
+                type: "rw"
             };
         }
     }
@@ -227,6 +229,38 @@ function parseMediaLink(url) {
         'Could not determine video type.  Check https://git.io/fjtOK for a list ' +
         'of supported media providers.'
     );
+}
+
+function extractQueryParam(query, param) {
+    var params = {};
+    query.split("&").forEach(function (kv) {
+        kv = kv.split("=");
+        params[kv[0]] = kv[1];
+    });
+
+    return params[param];
+}
+
+function parseTimeParam(t) {
+    if (typeof t !== "string") return undefined;
+    var m;
+    if (m = t.match(/^(\d+)h(\d+)m(\d+)s$/)) {
+        // 00h00m00s
+        return parseInt(m[1], 10) * 3600 + parseInt(m[2], 10) * 60 + parseInt(m[3], 10);
+    } else if (m = t.match(/^(\d+):(\d+):(\d+)$/)) {
+        // HH:MM:SS
+        return parseInt(m[1], 10) * 3600 + parseInt(m[2], 10) * 60 + parseInt(m[3], 10);
+    } else if (m = t.match(/^(\d+)m(\d+)s$/)) {
+        // 00m00s
+        return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+    } else if (m = t.match(/^(\d+):(\d+)$/)) {
+        // MM:SS
+        return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+    } else if (m = t.match(/^(\d+)s?$/)) {
+        // 00s
+        return parseInt(m[1], 10);
+    }
+    return undefined;
 }
 
 function formatURL(data) {

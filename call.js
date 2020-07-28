@@ -18,9 +18,13 @@ const main = async function main() {
             break;
         case 'ADD_QUEUE_LIBRARY_TIME':
             cmdBody.minutes = process.argv[3];
+            cmdBody.interval = process.argv[4];
+            cmdBody.announce = true;
             break;
         case 'ADD_QUEUE_LIBRARY_COUNT':
             cmdBody.count = process.argv[3];
+            cmdBody.interval = process.argv[4];
+            cmdBody.announce = true;
             break;
         case 'OPEN_PLAYLIST':
         case 'LOCK_PLAYLIST':

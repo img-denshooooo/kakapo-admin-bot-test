@@ -301,6 +301,7 @@ const addQueue = function addQueue(cmd) {
             reject('TIMEOUT - 時間内に正常終了しませんでした。youtubeの場合、追加制限がかかっているかもしれません。');
         }, TIMEOUT);
         let data = util.parseMediaLink(cmd.link);
+        console.log(data);
         SOCKET.emit("queue", {
             id: data.id,
             type: data.type,
@@ -374,34 +375,64 @@ const getLibrary = function getLibrary() {
  * ライブラリから指定した時間分追加
  */
 const addQueueLibraryTime = async function addQueueLibraryTime(cmd) {
-    const INTERVAL = 6000;
+    const INTERVAL = cmd.interval || 6000;
+    if (INTERVAL < 6000) {
+        INTERVAL = 6000;
+    }
     return getLibrary()
         .then(async data => {
             let queues = [];
             let time = (cmd.minutes || 0) * 60;
+            let sum = 0;
             while (time > 0 && data.length > 0) {
                 let tar = data.splice(util.rand(0, data.length - 1), 1)[0];
                 time -= tar.seconds;
+                sum += tar.seconds;
                 queues.push(util.formatURL(tar));
             }
 
-            util.log(`LIBRARYから ${queues.length} 件追加`);
+            util.log(`LIBRARYから ${sum / 60}:${sum % 60}分 (${queues.length}件)追加`);
             util.log(`負荷防止の為に1件につき${INTERVAL / 1000}秒の間隔で追加します`);
             
+            if (cmd.announce) {
+                await addChat({
+                    cmd: 'SEND_CHAT',
+                    msg: `${queues.length} 件追加！ 予定実行時間 ${Math.ceil((queues.length * 6) / 60)}分！`
+                })
+            }
+
             let cnt = 0;
             for (const queue of queues) {
                 util.log(`追加中... 残 ${queues.length - cnt} 件`);
 
-                await addQueue({
-                    cmd: 'ADD_QUEUE',
-                    link: queue
-                });
+                try {
+                    await addQueue({
+                        cmd: 'ADD_QUEUE',
+                        link: queue
+                    });
+                } catch (e) {
+                    util.log(`追加失敗: ${queue}`);
+                }
 
                 if (queues.indexOf(queue) != queues.length - 1) {
                     await util.sleep(INTERVAL);
                 }
 
                 cnt += 1;
+
+                if (cmd.announce && cnt % 10 == 0) {
+                    await addChat({
+                        cmd: 'SEND_CHAT',
+                        msg: `後 ${queues.length - cnt} 件...`
+                    })
+                }
+            }
+
+            if (cmd.announce) {
+                await addChat({
+                    cmd: 'SEND_CHAT',
+                    msg: `追加完了☆`
+                })
             }
 
             util.log(`追加完了 ${cnt} 件`);
@@ -413,7 +444,10 @@ const addQueueLibraryTime = async function addQueueLibraryTime(cmd) {
  * ライブラリから指定したサイズ分追加
  */
 const addQueueLibraryCount = async function addQueueLibraryCount(cmd) {
-    const INTERVAL = 6000;
+    const INTERVAL = cmd.interval || 6000;
+    if (INTERVAL < 6000) {
+        INTERVAL = 6000;
+    }
     return getLibrary()
         .then(async data => {
             let queues = [];
@@ -427,20 +461,45 @@ const addQueueLibraryCount = async function addQueueLibraryCount(cmd) {
             util.log(`LIBRARYから ${queues.length} 件追加`);
             util.log(`負荷防止の為に1件につき${INTERVAL / 1000}秒の間隔で追加します`);
 
+            if (cmd.announce) {
+                await addChat({
+                    cmd: 'SEND_CHAT',
+                    msg: `${queues.length} 件追加！ 予定実行時間 ${Math.ceil((queues.length * 6) / 60)}分！`
+                })
+            }
+
             let cnt = 0;
             for (const queue of queues) {
                 util.log(`追加中... 残 ${queues.length - cnt} 件`);
 
-                await addQueue({
-                    cmd: 'ADD_QUEUE',
-                    link: queue
-                });
+                try {
+                    await addQueue({
+                        cmd: 'ADD_QUEUE',
+                        link: queue
+                    });
+                } catch (e) {
+                    util.log(`追加失敗: ${queue}`);
+                }
 
                 if (queues.indexOf(queue) != queues.length - 1) {
                     await util.sleep(INTERVAL);
                 }
 
                 cnt += 1;
+
+                if (cmd.announce && cnt % 10 == 0) {
+                    await addChat({
+                        cmd: 'SEND_CHAT',
+                        msg: `後 ${queues.length - cnt} 件...`
+                    })
+                }
+            }
+
+            if (cmd.announce) {
+                await addChat({
+                    cmd: 'SEND_CHAT',
+                    msg: `追加完了☆`
+                })
             }
 
             util.log(`追加完了 ${cnt} 件`);
