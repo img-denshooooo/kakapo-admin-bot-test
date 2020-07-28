@@ -391,7 +391,7 @@ const addQueueLibraryTime = async function addQueueLibraryTime(cmd) {
                 queues.push(util.formatURL(tar));
             }
 
-            util.log(`LIBRARYから ${sum / 60}:${sum % 60}分 (${queues.length}件)追加`);
+            util.log(`LIBRARYから ${Math.floor(sum / 60)}min ${sum % 60}sec 分追加`);
             util.log(`負荷防止の為に1件につき${INTERVAL / 1000}秒の間隔で追加します`);
             
             if (cmd.announce) {
