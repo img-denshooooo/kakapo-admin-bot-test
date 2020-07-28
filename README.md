@@ -12,6 +12,9 @@ cytubeのチャンネルの管理者操作をある程度自動化できます�
 分かる人はAWSのEC2インスタンスとか借りてその上で実行してみて。
 
 # 更新履歴
+- v1.0.5 20/07/27 11:50
+  - ライブラリからランダムに n件 or n分 ぶんのプレイリストを作成するコマンドを追加。
+  - タスク起動以外にもコマンドを直接実行できるように。
 - v1.0.4 20/07/09 10:30
   - エラー時の挙動をちょっと修正。youtubeの追加制限エラーとかに気づきやすいように。
 - v1.0.3 20/07/04 11:05
@@ -256,11 +259,11 @@ cytube側で短期間の連続ログインを弾いたりしているので、�
         "cron": "0 0 12 * * *",
         "cmds": [
             {
-                "cmd": "ADD_QUEUE",
-                "link": "https://********************"
+                "cmd": "DEFAULT_PLAYMODE"
             },
             {
-                "cmd": "DEFAULT_PLAYMODE"
+                "cmd": "ADD_QUEUE",
+                "link": "https://********************"
             }
         ]
     },
@@ -276,6 +279,9 @@ cytube側で短期間の連続ログインを弾いたりしているので、�
         "cron": "0 0 9 * * *",
         "cmds": [
             {
+                "cmd": "DEFAULT_PLAYMODE"
+            },
+            {
                 "cmd": "ADD_QUEUE_RANDOM",
                 "links": [
                     "https://www.youtube.com/watch?v=DU6sYVEjb-M",
@@ -290,9 +296,6 @@ cytube側で短期間の連続ログインを弾いたりしているので、�
             {
                 "cmd": "SEND_CHAT",
                 "msg": "今日の運勢は…"
-            },
-            {
-                "cmd": "DEFAULT_PLAYMODE"
             }
         ]
     },
@@ -307,6 +310,9 @@ cytube側で短期間の連続ログインを弾いたりしているので、�
         "cron": "0 0 9 * * *",
         "cmds": [
             {
+                "cmd": "DEFAULT_PLAYMODE"
+            },
+            {
                 "cmd": "ADD_QUEUE_API",
                 "url": "https://hatarake-youtube-api.herokuapp.com/tenki",
                 "prop": "url"
@@ -314,9 +320,39 @@ cytube側で短期間の連続ログインを弾いたりしているので、�
             {
                 "cmd": "SEND_CHAT",
                 "msg": "今日の天気予報です"
-            },
+            }
+        ]
+    },
+    ```
+- ADD_QUEUE_LIBRARY_TIME  
+ライブラリから指定した分ぶんのランダムな曲を重複なしでキューに追加します。  
+追加は6秒間隔で行われます（負荷対策）。指定次第では結構時間がかかります。
+    ``` js
+    // 設定例
+    // 毎日24時に6時間分の曲を追加
+    {
+        "cron": "0 0 24 * * *",
+        "cmds": [
             {
-                "cmd": "DEFAULT_PLAYMODE"
+                "cmd": "ADD_QUEUE_LIBRARY_TIME",
+                "minutes": 360
+            }
+        ]
+    },
+    ```
+    
+- ADD_QUEUE_LIBRARY_COUNT  
+ライブラリから指定した数のランダムな曲を重複なしでキューに追加します。  
+追加は6秒間隔で行われます（負荷対策）。指定次第では結構時間がかかります。
+    ``` js
+    // 設定例
+    // 毎日9時に100件分の曲を追加
+    {
+        "cron": "0 0 9 * * *",
+        "cmds": [
+            {
+                "cmd": "ADD_QUEUE_LIBRARY_COUNT",
+                "count": 100
             }
         ]
     },
@@ -688,6 +724,57 @@ schedule.jsの設定チュートリアルです。
 ]
 ```
 こんな感じでタスクやコマンドを追加していくのが基本的な使い方です。
+
+# 直接実行
+v1.0.5からは直接実行機能を付けました。  
+ソースのルートディレクトリでプロンプトから以下のように呼び出してください。
+```
+node call {コマンド} {コマンドごとの引数}
+```
+※ `npm`じゃなく`node`なので注意
+
+## コマンド
+基本的にschedule.jsonで指定するものと同じです。  
+一部のコマンドは直接実行対象外です。
+以下はコマンド実行例。
+
+- SEND_CHAT  
+  テストと送信。
+  ```
+  node call SEND_CHAT "テスト"
+  ```
+  
+- ADD_QUEUE  
+  動画を追加
+  ```
+  node call ADD_QUEUE 動画のURL
+  ```
+
+- ADD_QUEUE_LIBRARY_TIME  
+  ライブラリからランダムに120分ぶんの動画を追加。
+  ※ 事前に上から再生モードにしておいた方がいい
+  ```
+  node call ADD_QUEUE_LIBRARY_TIME 120
+  ```
+  
+- ADD_QUEUE_LIBRARY_COUNT  
+  ライブラリからランダムに100件ぶんの動画を追加。
+  ※ 事前に上から再生モードにしておいた方がいい
+  ```
+  node call ADD_QUEUE_LIBRARY_COUNT 100 
+  ```
+
+- OPEN_PLAYLIST  
+- LOCK_PLAYLIST
+- DEFAULT_PLAYMODE
+- RANDOM_PLAYMODE
+- VOTE_PLAYMODE
+- TOGGLE_PLAYMODE
+- SHUFFLE_PLAYMODE  
+  全部まとめて引数なし。
+  ```
+  node call OPEN_PLAYLIST
+  ```
 
 # ごめん
 在宅勤務で暇だから片手間で作ったやつだからね。  
