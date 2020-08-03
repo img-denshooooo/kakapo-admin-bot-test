@@ -28,7 +28,7 @@ const ngTitle = function ngTitle(title) {
 
 const ngUrl = function ngUrl(url) {
     url = url.replace('http://', 'https://')
-    return json.urls.some(it => it.replace('http://', 'https://') === url);
+    return json.urls.some(it => url.indexOf(it.replace('http://', 'https://')) >= 0);
 }
 
 const ok = function ok(obj) {
