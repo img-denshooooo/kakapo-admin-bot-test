@@ -4,6 +4,7 @@
 const request = require('request');
 const io = require('socket.io-client');
 const util = require('./util');
+const filter = require('./filter');
 
 // const
 const PLAYMODE = {
@@ -386,9 +387,11 @@ const addQueueLibraryTime = async function addQueueLibraryTime(cmd) {
             let sum = 0;
             while (time > 0 && data.length > 0) {
                 let tar = data.splice(util.rand(0, data.length - 1), 1)[0];
-                time -= tar.seconds;
-                sum += tar.seconds;
-                queues.push(util.formatURL(tar));
+                if (filter.ok(tar)) {
+                    time -= tar.seconds;
+                    sum += tar.seconds;
+                    queues.push(util.formatURL(tar));
+                }
             }
 
             util.log(`LIBRARYから ${Math.floor(sum / 60)}min ${sum % 60}sec 分追加`);
@@ -454,8 +457,10 @@ const addQueueLibraryCount = async function addQueueLibraryCount(cmd) {
             let count = cmd.count || 0;
             while (count > 0 && data.length > 0) {
                 let tar = data.splice(util.rand(0, data.length - 1), 1)[0];
-                count -= 1;
-                queues.push(util.formatURL(tar));
+                if (filter.ok(tar)) {
+                    count -= 1;
+                    queues.push(util.formatURL(tar));
+                }
             }
 
             util.log(`LIBRARYから ${queues.length} 件追加`);
