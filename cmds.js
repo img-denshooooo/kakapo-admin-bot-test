@@ -1,5 +1,3 @@
-// v 1.0.4
-
 // imports
 const request = require('request');
 const io = require('socket.io-client');
@@ -466,9 +464,15 @@ const addQueueLibraryCount = async function addQueueLibraryCount(cmd) {
     if (INTERVAL < 6000) {
         INTERVAL = 6000;
     }
+<<<<<<< HEAD
 
     const msgFactory = await msgs.load('./msgs-add-library.json');
 
+=======
+    
+    const msgFactory = await msgs.load('./msgs-add-library.json');
+    
+>>>>>>> 91874a37c0b93797a2c28e4af19fced0a67d2424
     return getLibrary()
         .then(async data => {
             let queues = [];
