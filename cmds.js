@@ -274,7 +274,7 @@ const addChat = function addChat(cmd) {
     return new Promise((resolve, reject) => {
         let msg = cmd.msg;
         if (Array.isArray(cmd.msg)) {
-            msg = msg[util.rand(0, msg.length)];
+            msg = msg[util.rand(0, msg.length - 1)];
         }
 
         var timer;
@@ -466,6 +466,9 @@ const addQueueLibraryCount = async function addQueueLibraryCount(cmd) {
     if (INTERVAL < 6000) {
         INTERVAL = 6000;
     }
+
+    const msgFactory = await msgs.load('./msgs-add-library.json');
+
     return getLibrary()
         .then(async data => {
             let queues = [];
@@ -533,6 +536,64 @@ const addQueueLibraryCount = async function addQueueLibraryCount(cmd) {
         });
 };
 
+const pollPlayMode = function pollPlayMode(cmd) {
+    return new Promise(async (resolve, reject) => {
+        var timer;
+        let poll;
+
+        const msgFactory = await msgs.load('./msgs-poll-playmode.json');
+
+        SOCKET.once('newPoll', data => {
+            clearTimeout(timer);
+
+            poll = data;
+
+            SOCKET.on('updatePoll', data => {
+                poll = data;
+            });
+
+            SOCKET.once('closePoll', async data => {
+                let mode;
+
+                if (poll.counts[0] === Math.max(...poll.counts)) {
+                    await toDefaultPlayMode();
+                    mode = '上から';
+                } else if (poll.counts[1] === Math.max(...poll.counts)) {
+                    await toRandomPlayMode();
+                    mode = 'ランダム';
+                } else if (poll.counts[2] === Math.max(...poll.counts)) {
+                    await toVotePlayMode();
+                    mode = '投票';
+                } else {
+                    await shufflePlayMode({sameModeOk: true});
+                    mode = 'どれかの';
+                }
+                await addChat({
+                    cmd: 'SEND_CHAT',
+                    msg: msgFactory.getFormatMsg('END', {
+                        playmode: mode
+                    })
+                })
+                resolve(true);
+            });
+        });
+        timer = setTimeout(() => {
+            reject('TIMEOUT');
+        }, TIMEOUT);
+        SOCKET.emit('newPoll', {
+            title: msgFactory.getFormatMsg('TITLE', {
+                fun: Math.ceil(cmd.seconds / 60)
+            }),
+            opts: [msgFactory.getFormatMsg('DEFAULT_PLAYMODE'), 
+                msgFactory.getFormatMsg('RANDOM_PLAYMODE'), 
+                msgFactory.getFormatMsg('VOTE_PLAYMODE'), 
+                msgFactory.getFormatMsg('SHUFFLE_PLAYMODE')],
+            obscured: cmd.show || false,
+            timeout: cmd.seconds || 300
+        });
+    });
+};
+
 // コマンドのマップ
 const CMDS = {
     OPEN_PLAYLIST: openPlaylist,
@@ -542,12 +603,13 @@ const CMDS = {
     VOTE_PLAYMODE: toVotePlayMode,
     TOGGLE_PLAYMODE: togglePlayMode,
     SHUFFLE_PLAYMODE: shufflePlayMode,
+    POLL_PLAYMODE: pollPlayMode,
     SEND_CHAT: addChat,
     ADD_QUEUE: addQueue,
     ADD_QUEUE_RANDOM: addQueueRandom,
     ADD_QUEUE_API: addQueueApi,
     ADD_QUEUE_LIBRARY_TIME: addQueueLibraryTime,
-    ADD_QUEUE_LIBRARY_COUNT: addQueueLibraryCount
+    ADD_QUEUE_LIBRARY_COUNT: addQueueLibraryCount,
 };
 
 module.exports = {

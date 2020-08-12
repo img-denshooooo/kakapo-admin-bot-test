@@ -1,0 +1,20 @@
+{
+    "TITLE": [
+        "次の再生モードを決めるよ！${fun}分で締め切り！"
+    ],
+    "DEFAULT_PLAYMODE": [
+        "上から！"
+    ],
+    "RANDOM_PLAYMODE": [
+        "ランダム！"
+    ],
+    "VOTE_PLAYMODE": [
+        "投票！"
+    ],
+    "SHUFFLE_PLAYMODE": [
+        "お任せ！"
+    ],
+    "END": [
+        "${playmode}再生モードに切り替え☆"
+    ]
+}
