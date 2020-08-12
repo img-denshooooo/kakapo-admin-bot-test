@@ -464,6 +464,9 @@ const addQueueLibraryCount = async function addQueueLibraryCount(cmd) {
     if (INTERVAL < 6000) {
         INTERVAL = 6000;
     }
+    
+    const msgFactory = await msgs.load('./msgs-add-library.json');
+    
     return getLibrary()
         .then(async data => {
             let queues = [];
