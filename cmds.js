@@ -1,5 +1,3 @@
-// v 1.0.4
-
 // imports
 const request = require('request');
 const io = require('socket.io-client');
@@ -274,7 +272,7 @@ const addChat = function addChat(cmd) {
     return new Promise((resolve, reject) => {
         let msg = cmd.msg;
         if (Array.isArray(cmd.msg)) {
-            msg = msg[util.rand(0, msg.length)];
+            msg = msg[util.rand(0, msg.length - 1)];
         }
 
         var timer;
