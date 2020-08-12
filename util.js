@@ -1,5 +1,3 @@
-
-
 function extractQueryParam(query, param) {
     var params = {};
     query.split("&").forEach(function (kv) {

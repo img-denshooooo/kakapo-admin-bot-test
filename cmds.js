@@ -5,6 +5,7 @@ const request = require('request');
 const io = require('socket.io-client');
 const util = require('./util');
 const filter = require('./filter');
+const msgs = require('./msgs');
 
 // const
 const PLAYMODE = {
@@ -271,17 +272,22 @@ const shufflePlayMode = function shufflePlayMode(cmd) {
  */
 const addChat = function addChat(cmd) {
     return new Promise((resolve, reject) => {
+        let msg = cmd.msg;
+        if (Array.isArray(cmd.msg)) {
+            msg = msg[util.rand(0, msg.length)];
+        }
+
         var timer;
         SOCKET.once('chatMsg', mode => {
             clearTimeout(timer);
-            util.log(`SEND MSG : ${cmd.msg}`);
+            util.log(`SEND MSG : ${msg}`);
             resolve(true);
         });
         timer = setTimeout(() => {
             reject(false);
         }, TIMEOUT);
         SOCKET.emit("chatMsg", {
-            msg: cmd.msg,
+            msg: msg,
             meta: {}
         });
     });
@@ -380,6 +386,9 @@ const addQueueLibraryTime = async function addQueueLibraryTime(cmd) {
     if (INTERVAL < 6000) {
         INTERVAL = 6000;
     }
+
+    const msgFactory = await msgs.load('./msgs-add-library.json');
+
     return getLibrary()
         .then(async data => {
             let queues = [];
@@ -400,7 +409,11 @@ const addQueueLibraryTime = async function addQueueLibraryTime(cmd) {
             if (cmd.announce) {
                 await addChat({
                     cmd: 'SEND_CHAT',
-                    msg: `${queues.length} 件追加！ 予定実行時間 ${Math.ceil((queues.length * 6) / 60)}分！`
+                    msg: msgFactory.getFormatMsg('START', {
+                        kensu: queues.length,
+                        fun: Math.ceil(sum / 60),
+                        yoteiFun: Math.ceil((queues.length * 6) / 60)
+                    })
                 })
             }
 
@@ -426,7 +439,9 @@ const addQueueLibraryTime = async function addQueueLibraryTime(cmd) {
                 if (cmd.announce && cnt % 10 == 0) {
                     await addChat({
                         cmd: 'SEND_CHAT',
-                        msg: `後 ${queues.length - cnt} 件...`
+                        msg: msgFactory.getFormatMsg('INTERVAL', {
+                            nokori: queues.length - cnt
+                        })
                     })
                 }
             }
@@ -434,7 +449,7 @@ const addQueueLibraryTime = async function addQueueLibraryTime(cmd) {
             if (cmd.announce) {
                 await addChat({
                     cmd: 'SEND_CHAT',
-                    msg: `追加完了☆`
+                    msg: msgFactory.getFormatMsg('END')
                 })
             }
 
@@ -469,7 +484,11 @@ const addQueueLibraryCount = async function addQueueLibraryCount(cmd) {
             if (cmd.announce) {
                 await addChat({
                     cmd: 'SEND_CHAT',
-                    msg: `${queues.length} 件追加！ 予定実行時間 ${Math.ceil((queues.length * 6) / 60)}分！`
+                    msg: msgFactory.getFormatMsg('START', {
+                        kensu: queues.length,
+                        fun: Math.ceil(sum / 60),
+                        yoteiFun: Math.ceil((queues.length * 6) / 60)
+                    })
                 })
             }
 
@@ -495,7 +514,9 @@ const addQueueLibraryCount = async function addQueueLibraryCount(cmd) {
                 if (cmd.announce && cnt % 10 == 0) {
                     await addChat({
                         cmd: 'SEND_CHAT',
-                        msg: `後 ${queues.length - cnt} 件...`
+                        msg: msgFactory.getFormatMsg('INTERVAL', {
+                            nokori: queues.length - cnt
+                        })
                     })
                 }
             }
@@ -503,7 +524,7 @@ const addQueueLibraryCount = async function addQueueLibraryCount(cmd) {
             if (cmd.announce) {
                 await addChat({
                     cmd: 'SEND_CHAT',
-                    msg: `追加完了☆`
+                    msg: msgFactory.getFormatMsg('END')
                 })
             }
 
