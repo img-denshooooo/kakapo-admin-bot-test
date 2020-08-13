@@ -19,6 +19,8 @@ cytubeのチャンネルの管理者操作をある程度自動化できます�
 あと導入手引きはちょっと書けないかな…。多いから…。
 
 # 更新履歴
+- v1.0.10 20/08/13 09:00
+  - `POLL_PLAYMODE`のバグ修正。`show`が機能してなかった。ついでにコマンド直接実行にも対応。
 - v1.0.9 20/08/12 21:00
   - 投票アイテムを使って次の再生モードを決めるコマンド`POLL_PLAYMODE`を追加。
 - v1.0.8 20/08/12 17:00  
@@ -836,6 +838,13 @@ node call {コマンド} {コマンドごとの引数}
   node call ADD_QUEUE_LIBRARY_COUNT 100 
   ```
 
+- POLL_PLAYMODE
+  投票で再生モードを決定。
+  一つ目の引数は締め切り秒数。二つ目は投票状態を表示するか。
+  ```
+  node call POLL_PLAYMODE 300 true
+  ```
+  
 - OPEN_PLAYLIST  
 - LOCK_PLAYLIST
 - DEFAULT_PLAYMODE
