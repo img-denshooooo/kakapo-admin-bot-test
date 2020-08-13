@@ -544,6 +544,7 @@ const pollPlayMode = function pollPlayMode(cmd) {
         const msgFactory = await msgs.load('./msgs-poll-playmode.json');
 
         SOCKET.once('newPoll', data => {
+            util.log(`投票開始 投票終了まで待機`);
             clearTimeout(timer);
 
             poll = data;
@@ -553,21 +554,36 @@ const pollPlayMode = function pollPlayMode(cmd) {
             });
 
             SOCKET.once('closePoll', async data => {
+                util.log(`投票終了`);
+                
                 let mode;
 
-                if (poll.counts[0] === Math.max(...poll.counts)) {
-                    await toDefaultPlayMode();
-                    mode = '上から';
-                } else if (poll.counts[1] === Math.max(...poll.counts)) {
-                    await toRandomPlayMode();
-                    mode = 'ランダム';
-                } else if (poll.counts[2] === Math.max(...poll.counts)) {
-                    await toVotePlayMode();
-                    mode = '投票';
-                } else {
-                    await shufflePlayMode({sameModeOk: true});
-                    mode = 'どれかの';
+                let max = Math.max(...poll.counts);
+                let idx = util.rand(0, 3);
+
+                while (poll.counts[idx] !== max) {
+                    idx = util.rand(0, 3);
                 }
+
+                switch (idx) {
+                    case 0:
+                        await toDefaultPlayMode();
+                        mode = '上から';
+                        break;
+                    case 1:
+                        await toRandomPlayMode();
+                        mode = 'ランダム';
+                        break;
+                    case 2:
+                        await toVotePlayMode();
+                        mode = '投票';
+                        break;
+                    case 3:
+                        await shufflePlayMode({ sameModeOk: true });
+                        mode = 'どれかの';
+                        break;
+                }
+
                 await addChat({
                     cmd: 'SEND_CHAT',
                     msg: msgFactory.getFormatMsg('END', {
