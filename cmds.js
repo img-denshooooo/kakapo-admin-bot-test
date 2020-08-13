@@ -588,7 +588,7 @@ const pollPlayMode = function pollPlayMode(cmd) {
                 msgFactory.getFormatMsg('RANDOM_PLAYMODE'), 
                 msgFactory.getFormatMsg('VOTE_PLAYMODE'), 
                 msgFactory.getFormatMsg('SHUFFLE_PLAYMODE')],
-            obscured: cmd.show || false,
+            obscured: !cmd.show,
             timeout: cmd.seconds || 300
         });
     });
