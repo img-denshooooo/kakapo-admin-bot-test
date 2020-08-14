@@ -26,6 +26,15 @@ const main = async function main() {
             cmdBody.interval = process.argv[4];
             cmdBody.announce = true;
             break;
+        case 'POLL_PLAYMODE':
+            cmdBody.seconds = Number(process.argv[3] || 300);
+            cmdBody.show = process.argv[4] === 'true';
+            break;
+        case 'QUICKPUSH_PLAYMODE':
+            cmdBody.minutes = Number(process.argv[3] || 30);
+            cmdBody.min = Number(process.argv[4] || 4);
+            cmdBody.max = Number(process.argv[5] || 8);
+            break;
         case 'OPEN_PLAYLIST':
         case 'LOCK_PLAYLIST':
         case 'DEFAULT_PLAYMODE':

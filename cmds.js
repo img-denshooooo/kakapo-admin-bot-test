@@ -555,7 +555,7 @@ const pollPlayMode = function pollPlayMode(cmd) {
 
             SOCKET.once('closePoll', async data => {
                 util.log(`投票終了`);
-                
+
                 let mode;
 
                 let max = Math.max(...poll.counts);
@@ -610,6 +610,125 @@ const pollPlayMode = function pollPlayMode(cmd) {
     });
 };
 
+const quickpushPlayMode = function quickpushPlayMode(cmd) {
+    return new Promise(async (resolve, reject) => {
+        let alive = true;
+
+        const msgFactory = await msgs.load('./msgs-quickpush-playmode.json');
+        
+        setTimeout(async () => {
+            alive = false;
+            await addChat({
+                cmd: 'SEND_CHAT',
+                msg: msgFactory.getFormatMsg('END')
+            });
+            resolve(true);
+        }, (cmd.minutes || 30) * 60 * 1000);
+
+        SOCKET.on('playlist', data => {
+            if (!alive) {
+                return;
+            }
+
+            if (!data.length) {
+                resolve(true);
+                return;
+            }
+
+            let poll;
+            let arr;
+            let current;
+
+            SOCKET.once('newPoll', data => {
+                util.log(`投票開始 投票終了まで待機`);
+
+                poll = data;
+
+                SOCKET.once('closePoll', async data => {
+                    util.log(`投票終了`);
+
+                    let idx = 0;
+                    for (let i = 0; i < poll.counts.length; i++) {
+                        if (poll.counts[i] >= 1) {
+                            idx = i;
+                        }
+                    }
+
+                    SOCKET.emit("moveMedia", {
+                        from: arr[idx].uid,
+                        after: current
+                    });
+
+                    await addChat({
+                        cmd: 'SEND_CHAT',
+                        msg: msgFactory.getFormatMsg('WINNER', {
+                            title: arr[idx].media.title
+                        })
+                    });
+                });
+
+                SOCKET.once('updatePoll', data => {
+                    poll = data;
+                    SOCKET.emit('closePoll');
+                });
+            });
+
+            arr = [];
+            current = data[0].uid;
+            let max = util.rand(cmd.min || 4, cmd.max || 8);
+            for (let i = 0; i < max; i++) {
+                arr.push(data.splice(util.rand(0, data.length - 1), 1)[0]);
+            }
+            SOCKET.emit('newPoll', {
+                title: msgFactory.getFormatMsg('POLL_TITLE'),
+                opts: arr.map(it => it.media.title),
+                obscured: false,
+                timeout: 300
+            });
+        });
+
+        SOCKET.on('errorMsg', async data => {
+            if (!alive) {
+                return;
+            }
+
+            await addChat({
+                cmd: 'SEND_CHAT',
+                msg: '早押し追加失敗...前の曲の長さが1分以内だとNG'
+            });
+        });
+
+        SOCKET.on('changeMedia', async data => {
+            if (!alive) {
+                return;
+            }
+
+            await addChat({
+                cmd: 'SEND_CHAT',
+                msg: msgFactory.getFormatMsg('COUNTDOWN_START')
+            });
+            await util.sleep(1000);
+            for (let i = 5; i > 0; i--) {
+                await addChat({
+                    cmd: 'SEND_CHAT',
+                    msg: i.toString()
+                });
+                await util.sleep(1000);
+            }
+            
+            await toDefaultPlayMode();
+            SOCKET.emit('requestPlaylist');
+        });
+
+        await addChat({
+            cmd: 'SEND_CHAT',
+            msg: msgFactory.getFormatMsg('START', {
+                endDate: new Date(new Date().getTime() + ((cmd.minutes || 30) * 60 * 1000)).toLocaleString()
+            })
+        });
+    });
+};
+
 // コマンドのマップ
 const CMDS = {
     OPEN_PLAYLIST: openPlaylist,
@@ -620,6 +739,7 @@ const CMDS = {
     TOGGLE_PLAYMODE: togglePlayMode,
     SHUFFLE_PLAYMODE: shufflePlayMode,
     POLL_PLAYMODE: pollPlayMode,
+    QUICKPUSH_PLAYMODE: quickpushPlayMode,
     SEND_CHAT: addChat,
     ADD_QUEUE: addQueue,
     ADD_QUEUE_RANDOM: addQueueRandom,

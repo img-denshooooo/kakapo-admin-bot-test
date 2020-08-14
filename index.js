@@ -1,4 +1,4 @@
-// v 1.0.11
+// v 1.0.12
 
 // imports
 const cron = require('node-cron');
