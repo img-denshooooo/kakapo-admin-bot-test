@@ -648,8 +648,19 @@ const quickpushPlayMode = function quickpushPlayMode(cmd) {
 
                 poll = data;
 
+                let cnt = cmd.vote || 1;
+                SOCKET.on('updatePoll', data => {
+                    poll = data;
+                    cnt -= 1;
+                    if (cnt <= 0) {
+                        SOCKET.off('updatePoll');
+                        SOCKET.emit('closePoll');
+                    }
+                });
+
                 SOCKET.once('closePoll', async data => {
                     util.log(`投票終了`);
+                    SOCKET.off('updatePoll');
 
                     let max = Math.max(...poll.counts);
                     let idx = util.rand(0, poll.counts.length - 1);
@@ -669,15 +680,6 @@ const quickpushPlayMode = function quickpushPlayMode(cmd) {
                             title: arr[idx].media.title
                         })
                     });
-                });
-
-                let cnt = cmd.vote || 1;
-                SOCKET.once('updatePoll', data => {
-                    poll = data;
-                    cnt -= 1;
-                    if (cnt <= 0)  {
-                        SOCKET.emit('closePoll');
-                    }
                 });
             });
 
