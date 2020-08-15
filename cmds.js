@@ -648,15 +648,16 @@ const quickpushPlayMode = function quickpushPlayMode(cmd) {
 
                 poll = data;
 
-                let cnt = cmd.vote || 1;
-                SOCKET.on('updatePoll', data => {
-                    poll = data;
-                    cnt -= 1;
-                    if (cnt <= 0) {
-                        SOCKET.off('updatePoll');
+                if (cmd.vote == 1) {
+                    SOCKET.once('updatePoll', data => {
+                        poll = data;
                         SOCKET.emit('closePoll');
-                    }
-                });
+                    });
+                } else {
+                    SOCKET.on('updatePoll', data => {
+                        poll = data;
+                    });
+                }
 
                 SOCKET.once('closePoll', async data => {
                     util.log(`投票終了`);
@@ -692,14 +693,26 @@ const quickpushPlayMode = function quickpushPlayMode(cmd) {
                     arr.push(data.splice(util.rand(0, data.length - 1), 1)[0]);
                 }
             }
-            SOCKET.emit('newPoll', {
-                title: msgFactory.getFormatMsg('POLL_TITLE', {
-                    vote: cmd.vote
-                }),
-                opts: arr.map(it => it.media.title),
-                obscured: false,
-                timeout: 10
-            });
+
+            if (cmd.vote == 1) {
+                SOCKET.emit('newPoll', {
+                    title: msgFactory.getFormatMsg('POLL_TITLE_ONE', {
+                        vote: cmd.vote
+                    }),
+                    opts: arr.map(it => it.media.title),
+                    obscured: false,
+                    timeout: 10
+                });
+            } else {
+                SOCKET.emit('newPoll', {
+                    title: msgFactory.getFormatMsg('POLL_TITLE_TIME', {
+                        vote: cmd.vote
+                    }),
+                    opts: arr.map(it => it.media.title),
+                    obscured: true,
+                    timeout: 3
+                });
+            }
         });
 
         SOCKET.on('errorMsg', async data => {
