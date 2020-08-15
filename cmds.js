@@ -625,12 +625,16 @@ const quickpushPlayMode = function quickpushPlayMode(cmd) {
             resolve(true);
         }, (cmd.minutes || 30) * 60 * 1000);
 
-        SOCKET.on('playlist', data => {
+        SOCKET.on('playlist', async data => {
             if (!alive) {
                 return;
             }
 
-            if (!data.length) {
+            if (data.length <= 1) {
+                await addChat({
+                    cmd: 'SEND_CHAT',
+                    msg: msgFactory.getFormatMsg('END')
+                });
                 resolve(true);
                 return;
             }
@@ -647,11 +651,11 @@ const quickpushPlayMode = function quickpushPlayMode(cmd) {
                 SOCKET.once('closePoll', async data => {
                     util.log(`投票終了`);
 
-                    let idx = 0;
-                    for (let i = 0; i < poll.counts.length; i++) {
-                        if (poll.counts[i] >= 1) {
-                            idx = i;
-                        }
+                    let max = Math.max(...poll.counts);
+                    let idx = util.rand(0, poll.counts.length - 1);
+
+                    while (poll.counts[idx] !== max) {
+                        idx = util.rand(0, poll.counts.length - 1);
                     }
 
                     SOCKET.emit("moveMedia", {
@@ -667,23 +671,32 @@ const quickpushPlayMode = function quickpushPlayMode(cmd) {
                     });
                 });
 
+                let cnt = cmd.vote || 1;
                 SOCKET.once('updatePoll', data => {
                     poll = data;
-                    SOCKET.emit('closePoll');
+                    cnt -= 1;
+                    if (cnt <= 0)  {
+                        SOCKET.emit('closePoll');
+                    }
                 });
             });
 
             arr = [];
             current = data[0].uid;
+            data.splice(0, 1);
             let max = util.rand(cmd.min || 4, cmd.max || 8);
             for (let i = 0; i < max; i++) {
-                arr.push(data.splice(util.rand(0, data.length - 1), 1)[0]);
+                if (data.length > 0) {
+                    arr.push(data.splice(util.rand(0, data.length - 1), 1)[0]);
+                }
             }
             SOCKET.emit('newPoll', {
-                title: msgFactory.getFormatMsg('POLL_TITLE'),
+                title: msgFactory.getFormatMsg('POLL_TITLE', {
+                    vote: cmd.vote
+                }),
                 opts: arr.map(it => it.media.title),
                 obscured: false,
-                timeout: 300
+                timeout: 10
             });
         });
 

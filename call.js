@@ -34,6 +34,7 @@ const main = async function main() {
             cmdBody.minutes = Number(process.argv[3] || 30);
             cmdBody.min = Number(process.argv[4] || 4);
             cmdBody.max = Number(process.argv[5] || 8);
+            cmdBody.vote = Number(process.argv[6] || 1);
             break;
         case 'OPEN_PLAYLIST':
         case 'LOCK_PLAYLIST':
