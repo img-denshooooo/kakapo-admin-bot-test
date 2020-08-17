@@ -723,7 +723,6 @@ const quickpushPlayMode = function quickpushPlayMode(cmd) {
             if (!alive) {
                 return;
             }
-            SOCKET.emit('closePoll');
 
             await addChat({
                 cmd: 'SEND_CHAT',
@@ -855,6 +854,18 @@ const customVotePlayMode = function customVotePlayMode(cmd) {
         SOCKET.on('changeMedia', async data => {
             if (!alive) {
                 return;
+            }
+
+            if (data.seconds < cmd.seconds) {
+                if (data.seconds < 5) {
+                    setTimeout(() => {
+                        SOCKET.emit('closePoll');
+                    }, 3000);
+                } else {
+                    setTimeout(() => {
+                        SOCKET.emit('closePoll');
+                    }, (data.seconds - 5) * 1000);
+                }
             }
 
             await toDefaultPlayMode();

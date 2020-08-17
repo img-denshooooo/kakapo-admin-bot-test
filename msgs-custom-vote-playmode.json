@@ -1,6 +1,6 @@
 {
     "START": [
-        "${endDate}頃までカスタム投票再生モード！${seconds}秒 ${min}～${max}択！投票状況${show}！"
+        "${endDate}頃までカスタム投票再生モード！${seconds}秒締め切り！${min}～${max}択！投票状況${show}！"
     ],
     "POLL_TITLE": [
         "次に再生する曲を選んでね！${seconds}秒で締め切り！"
