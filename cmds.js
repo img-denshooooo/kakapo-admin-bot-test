@@ -656,6 +656,10 @@ const quickpushPlayMode = function quickpushPlayMode(cmd) {
                 } else {
                     SOCKET.on('updatePoll', data => {
                         poll = data;
+                        if (poll.counts.reduce((t1, t2) => t1 + t2, 0) >= cmd.vote) {
+                            SOCKET.emit('closePoll');
+                            SOCKET.off('updatePoll');
+                        }
                     });
                 }
 
@@ -694,25 +698,14 @@ const quickpushPlayMode = function quickpushPlayMode(cmd) {
                 }
             }
 
-            if (cmd.vote == 1) {
-                SOCKET.emit('newPoll', {
-                    title: msgFactory.getFormatMsg('POLL_TITLE_ONE', {
-                        vote: cmd.vote
-                    }),
-                    opts: arr.map(it => it.media.title),
-                    obscured: false,
-                    timeout: 10
-                });
-            } else {
-                SOCKET.emit('newPoll', {
-                    title: msgFactory.getFormatMsg('POLL_TITLE_TIME', {
-                        vote: cmd.vote
-                    }),
-                    opts: arr.map(it => it.media.title),
-                    obscured: true,
-                    timeout: 3
-                });
-            }
+            SOCKET.emit('newPoll', {
+                title: msgFactory.getFormatMsg('POLL_TITLE', {
+                    vote: cmd.vote
+                }),
+                opts: arr.map(it => it.media.title),
+                obscured: false,
+                timeout: 10
+            });
         });
 
         SOCKET.on('errorMsg', async data => {
@@ -748,10 +741,134 @@ const quickpushPlayMode = function quickpushPlayMode(cmd) {
             SOCKET.emit('requestPlaylist');
         });
 
+        await toDefaultPlayMode();
         await addChat({
             cmd: 'SEND_CHAT',
             msg: msgFactory.getFormatMsg('START', {
                 endDate: new Date(new Date().getTime() + ((cmd.minutes || 30) * 60 * 1000)).toLocaleString()
+            })
+        });
+    });
+};
+
+const customVotePlayMode = function customVotePlayMode(cmd) {
+    if (cmd.max < 50) {
+        cmd.max = 50;
+    }
+    return new Promise(async (resolve, reject) => {
+        let alive = true;
+
+        const msgFactory = await msgs.load('./msgs-custom-vote-playmode.json');
+
+        setTimeout(async () => {
+            alive = false;
+            await addChat({
+                cmd: 'SEND_CHAT',
+                msg: msgFactory.getFormatMsg('END')
+            });
+            resolve(true);
+        }, (cmd.minutes || 30) * 60 * 1000);
+
+        SOCKET.on('playlist', async data => {
+            if (!alive) {
+                return;
+            }
+
+            if (data.length <= 1) {
+                await addChat({
+                    cmd: 'SEND_CHAT',
+                    msg: msgFactory.getFormatMsg('END')
+                });
+                resolve(true);
+                return;
+            }
+
+            let poll;
+            let arr;
+            let current;
+
+            SOCKET.on('updatePoll', data => {
+                poll = data;
+            });
+
+            SOCKET.once('newPoll', data => {
+                util.log(`投票開始 投票終了まで待機`);
+
+                poll = data;
+
+                SOCKET.once('closePoll', async data => {
+                    util.log(`投票終了`);
+
+                    let max = Math.max(...poll.counts);
+                    let idx = util.rand(0, poll.counts.length - 1);
+
+                    while (poll.counts[idx] !== max) {
+                        idx = util.rand(0, poll.counts.length - 1);
+                    }
+
+                    SOCKET.emit("moveMedia", {
+                        from: arr[idx].uid,
+                        after: current
+                    });
+
+                    await addChat({
+                        cmd: 'SEND_CHAT',
+                        msg: msgFactory.getFormatMsg('WINNER', {
+                            title: arr[idx].media.title
+                        })
+                    });
+                });
+            });
+
+            arr = [];
+            current = data[0].uid;
+            data.splice(0, 1);
+            let max = util.rand(cmd.min || 4, cmd.max || 8);
+            for (let i = 0; i < max; i++) {
+                if (data.length > 0) {
+                    arr.push(data.splice(util.rand(0, data.length - 1), 1)[0]);
+                }
+            }
+
+            SOCKET.emit('newPoll', {
+                title: msgFactory.getFormatMsg('POLL_TITLE', {
+                    seconds: cmd.seconds || 60
+                }),
+                opts: arr.map(it => it.media.title),
+                obscured: !!cmd.show,
+                timeout: cmd.seconds || 60
+            });
+        });
+
+        SOCKET.on('errorMsg', async data => {
+            if (!alive) {
+                return;
+            }
+
+            await addChat({
+                cmd: 'SEND_CHAT',
+                msg: '投票追加失敗...前の曲の長さが1分以内だとNG'
+            });
+        });
+
+        SOCKET.on('changeMedia', async data => {
+            if (!alive) {
+                return;
+            }
+
+            await toDefaultPlayMode();
+            SOCKET.emit('requestPlaylist');
+        });
+
+        await toDefaultPlayMode();
+        await addChat({
+            cmd: 'SEND_CHAT',
+            msg: msgFactory.getFormatMsg('START', {
+                endDate: new Date(new Date().getTime() + ((cmd.minutes || 30) * 60 * 1000)).toLocaleString(),
+                seconds: cmd.seconds || 60,
+                min: cmd.min,
+                max: cmd.max,
+                show: cmd.show ? '表示' : '非表示'
             })
         });
     });
@@ -768,6 +885,7 @@ const CMDS = {
     SHUFFLE_PLAYMODE: shufflePlayMode,
     POLL_PLAYMODE: pollPlayMode,
     QUICKPUSH_PLAYMODE: quickpushPlayMode,
+    CUSTOM_VOTE_PLAYMODE: customVotePlayMode,
     SEND_CHAT: addChat,
     ADD_QUEUE: addQueue,
     ADD_QUEUE_RANDOM: addQueueRandom,

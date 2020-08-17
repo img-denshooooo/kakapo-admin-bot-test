@@ -2,11 +2,8 @@
     "START": [
         "${endDate}頃まで早押し再生モード！"
     ],
-    "POLL_TITLE_ONE": [
-        "次に再生する曲を早押し！先着１票！"
-    ],
-    "POLL_TITLE_TIME": [
-        "次に再生する曲を早押し！３秒締め切り！"
+    "POLL_TITLE": [
+        "次に再生する曲を早押し！先着${vote}票！"
     ],
     "COUNTDOWN_START": [
         "早押しいくよー"

@@ -36,6 +36,13 @@ const main = async function main() {
             cmdBody.max = Number(process.argv[5] || 8);
             cmdBody.vote = Number(process.argv[6] || 1);
             break;
+        case 'CUSTOM_VOTE_PLAYMODE':
+            cmdBody.minutes = Number(process.argv[3] || 30);
+            cmdBody.seconds = Number(process.argv[4] || 60);
+            cmdBody.min = Number(process.argv[5] || 4);
+            cmdBody.max = Number(process.argv[6] || 4);
+            cmdBody.show = Number(process.argv[7] === 'true');
+            break;
         case 'OPEN_PLAYLIST':
         case 'LOCK_PLAYLIST':
         case 'DEFAULT_PLAYMODE':
