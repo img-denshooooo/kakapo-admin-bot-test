@@ -723,6 +723,7 @@ const quickpushPlayMode = function quickpushPlayMode(cmd) {
             if (!alive) {
                 return;
             }
+            SOCKET.emit('closePoll');
 
             await addChat({
                 cmd: 'SEND_CHAT',
