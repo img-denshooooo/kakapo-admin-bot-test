@@ -752,7 +752,7 @@ const quickpushPlayMode = function quickpushPlayMode(cmd) {
 };
 
 const customVotePlayMode = function customVotePlayMode(cmd) {
-    if (cmd.max < 50) {
+    if (cmd.max > 50) {
         cmd.max = 50;
     }
     return new Promise(async (resolve, reject) => {
@@ -814,7 +814,7 @@ const customVotePlayMode = function customVotePlayMode(cmd) {
                     await addChat({
                         cmd: 'SEND_CHAT',
                         msg: msgFactory.getFormatMsg('WINNER', {
-                            title: arr[idx].media.title
+                            title: cmd.chaos ? util.shuffle([...(arr[idx].media.title)]).join('') : arr[idx].media.title
                         })
                     });
                 });
@@ -834,8 +834,13 @@ const customVotePlayMode = function customVotePlayMode(cmd) {
                 title: msgFactory.getFormatMsg('POLL_TITLE', {
                     seconds: cmd.seconds || 60
                 }),
-                opts: arr.map(it => it.media.title),
-                obscured: !!cmd.show,
+                opts: arr.map(it => {
+                    if (cmd.chaos) {
+                        return util.shuffle([...it.media.title]).join('');
+                    }
+                    return it.media.title;
+                }),
+                obscured: !cmd.show,
                 timeout: cmd.seconds || 60
             });
         });
@@ -883,6 +888,16 @@ const customVotePlayMode = function customVotePlayMode(cmd) {
                 show: cmd.show ? '表示' : '非表示'
             })
         });
+        if (cmd.chaos) {
+            await addChat({
+                cmd: 'SEND_CHAT',
+                msg: util.shuffle([...'ChaosモードON！曲名がランダムに並べ替えられるよ！バグじゃないよ！']).join('')
+            });
+            await addChat({
+                cmd: 'SEND_CHAT',
+                msg: '(ChaosモードON！曲名がランダムに並べ替えられるよ！バグじゃないよ！)'
+            });
+        }
     });
 };
 

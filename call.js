@@ -42,6 +42,7 @@ const main = async function main() {
             cmdBody.min = Number(process.argv[5] || 4);
             cmdBody.max = Number(process.argv[6] || 4);
             cmdBody.show = Number(process.argv[7] === 'true');
+            cmdBody.chaos = Number(process.argv[8] === 'true');
             break;
         case 'OPEN_PLAYLIST':
         case 'LOCK_PLAYLIST':
