@@ -19,7 +19,10 @@ fs.readFile('./filter.json', (err, data) => {
 });
 
 const ng = function ng(obj) {
-    return ngTitle(obj.title) || ngUrl(util.formatURL(obj)) || ngTime(obj.seconds);
+    return ngTitle(obj.title) 
+            || ngUrl(util.formatURL(obj))
+            || ngTime(obj.seconds)
+            || ngIine(obj.meta.votecnt);
 }
 
 const ngTitle = function ngTitle(title) {
@@ -43,6 +46,20 @@ const ngTime = function ngTime(seconds) {
     }
     return json.minSeconds > seconds 
             || seconds > json.maxSeconds;
+}
+
+const ngIine = function ngIine(iine) {
+    if (json.minIine === -1 && json.maxIine === -1) {
+        return false;
+    }
+    if (json.minIine === -1) {
+        return iine > json.maxIine;
+    }
+    if (json.maxIine === -1) {
+        return json.minIine > iine;
+    }
+    return json.minIine > iine
+        || iine > json.maxIine;
 }
 
 const ok = function ok(obj) {

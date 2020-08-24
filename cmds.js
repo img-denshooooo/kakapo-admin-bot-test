@@ -473,10 +473,12 @@ const addQueueLibraryCount = async function addQueueLibraryCount(cmd) {
         .then(async data => {
             let queues = [];
             let count = cmd.count || 0;
+            let sum = 0;
             while (count > 0 && data.length > 0) {
                 let tar = data.splice(util.rand(0, data.length - 1), 1)[0];
                 if (filter.ok(tar)) {
                     count -= 1;
+                    sum += tar.seconds;
                     queues.push(util.formatURL(tar));
                 }
             }

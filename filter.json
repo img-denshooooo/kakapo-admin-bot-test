@@ -8,5 +8,7 @@
         "https://youtube.com/watch?v=weLA22wlSq4"
     ],
     "minSeconds": 0,
-    "maxSeconds": 600
+    "maxSeconds": 600,
+    "minIine": -1,
+    "maxIine": -1
 }
